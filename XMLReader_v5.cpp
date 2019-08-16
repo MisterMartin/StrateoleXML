@@ -49,13 +49,19 @@ void XMLReader::ResetReader()
     working_crc = crc_poly;
     crc_result = 0;
     num_fields = 0;
-    zephyr_message = NO_MESSAGE;
+
+    // null-terminate all buffer first characters
+    message_buff[0] = '\0';
+    for (int i = 0; i < 8; i++) {
+        fields[i][0] = '\0';
+        field_values[i][0] = '\0';
+    }
 }
 
 bool XMLReader::GetNewMessage()
 {
     // set a 0.25 second timeout
-    uint32_t timeout = millis() + 250;
+    uint32_t timeout = millis() + 1000;
     char read_char = '\0';
 
     // read the message type opening tag through the newline, verify the type
@@ -66,12 +72,16 @@ bool XMLReader::GetNewMessage()
 
     // as long as there is a tab next, read a full field through the newline
     while (millis() < timeout) {
-        if (rx_stream->available() && '\t' == rx_stream->peek()) {
-            // clear the \t and read the field
-            if (!ReadNextChar(&read_char) || !ReadField(timeout)) {
-                ResetReader();
-                rx_stream->flush();
-                return false;
+        if (rx_stream->available()) {
+            if ('\t' == rx_stream->peek()) {
+                // clear the \t and read the field
+                if (!ReadNextChar(&read_char) || !ReadField(timeout)) {
+                    ResetReader();
+                    rx_stream->flush();
+                    return false;
+                }
+            } else {
+                break; // no tab means no more fields
             }
         }
     }
@@ -125,15 +135,117 @@ bool XMLReader::ParseMessage()
     if (GPS == zephyr_message) return ParseGPSMessage();
 
     // verify instrument id
-    if (0 != strcmp(fields[0], "Inst")) return false;
-    if (0 != strcmp(field_values[0], inst_ids[instrument])) return false;
+    if (0 != strcmp(fields[1], "Inst")) return false;
+    if (0 != strcmp(field_values[1], inst_ids[instrument])) return false;
+
+    switch (zephyr_message) {
+    case IM:
+        // verify mode field
+        if (0 != strcmp(fields[2], "Mode")) return false;
+
+        // get mode
+        if (0 == strcmp(field_values[2], "SB")) {
+            zephyr_mode = MODE_STANDBY;
+        } else if (0 == strcmp(field_values[2], "FL")) {
+            zephyr_mode = MODE_FLIGHT;
+        } else if (0 == strcmp(field_values[2], "LP")) {
+            zephyr_mode = MODE_LOWPOWER;
+        } else if (0 == strcmp(field_values[2], "SA")) {
+            zephyr_mode = MODE_SAFETY;
+        } else if (0 == strcmp(field_values[2], "EF")) {
+            zephyr_mode = MODE_EOF;
+        } else {
+            return false;
+        }
+        break;
+    case SAck:
+    case RAAck:
+    case TMAck:
+        // verify ack field
+        if (0 != strcmp(fields[2], "Ack")) return false;
+
+        // get ack value
+        if (0 == strcmp(field_values[2], "ACK")) {
+            zephyr_ack = true;
+        } else if (0 == strcmp(field_values[2], "NAK")) {
+            zephyr_ack = false;
+        } else {
+            return false;
+        }
+        break;
+    case SW:
+        // shutdown warning has no more fields
+        break;
+    case TC:
+        // verify binary length field
+        if (0 != strcmp(fields[2], "Length")) return false;
+
+        // get the binary length
+        if (1 != sscanf(field_values[2], "%u", &utemp)) return false;
+        if (utemp > 1800) return false;
+        tc_length = (uint16_t) utemp;
+        break;
+    default:
+        return false;
+    }
 
     return true;
 }
 
 bool XMLReader::ParseGPSMessage()
 {
-    return false;
+    float ftemp;
+    unsigned int utemp0, utemp1, utemp2;
+
+    // verify the fields
+    if (0 != strcmp(fields[1], "Date")) return false;
+    if (0 != strcmp(fields[2], "Time")) return false;
+    if (0 != strcmp(fields[3], "Lon")) return false;
+    if (0 != strcmp(fields[4], "Lat")) return false;
+    if (0 != strcmp(fields[5], "Alt")) return false;
+    if (0 != strcmp(fields[6], "SZA")) return false;
+    if (0 != strcmp(fields[7], "Quality")) return false;
+
+    // parse the date (YYYY/MM/DD)
+    if (3 != sscanf(field_values[1], "%u/%u/%u", &utemp0, &utemp1, &utemp2)) return false;
+    if (utemp0 > 2050) return false;
+    if (utemp1 > 12) return false;
+    if (utemp2 > 31) return false;
+    zephyr_gps.year = (uint16_t) utemp0;
+    zephyr_gps.month = (uint8_t) utemp1;
+    zephyr_gps.day = (uint8_t) utemp2;
+
+    // parse the time (HH:MM:SS)
+    if (3 != sscanf(field_values[2], "%u:%u:%u", &utemp0, &utemp1, &utemp2)) return false;
+    if (utemp0 > 23) return false;
+    if (utemp1 > 59) return false;
+    if (utemp2 > 59) return false; // don't handle leap seconds
+    zephyr_gps.hour = (uint8_t) utemp0;
+    zephyr_gps.minute = (uint8_t) utemp1;
+    zephyr_gps.second = (uint8_t) utemp2;
+
+    // parse the longitude
+    if (1 != sscanf(field_values[3], "%f", &ftemp)) return false;
+    zephyr_gps.longitude = ftemp;
+
+    // parse the latitude
+    if (1 != sscanf(field_values[4], "%f", &ftemp)) return false;
+    zephyr_gps.latitude = ftemp;
+
+    // parse the altitude
+    if (1 != sscanf(field_values[5], "%f", &ftemp)) return false;
+    zephyr_gps.altitude = ftemp;
+
+    // parse the solar zenith angle
+    if (1 != sscanf(field_values[6], "%f", &ftemp)) return false;
+    zephyr_gps.solar_zenith_angle = ftemp;
+
+    // parse the GPS fix quality
+    if (1 != sscanf(field_values[7], "%u", &utemp0)) return false;
+    if (utemp0 < 2 || utemp0 > 3) return false; // only accept good time fixes
+    zephyr_gps.quality = utemp0;
+
+    return true;
 }
 
 // --------------------------------------------------------
@@ -221,13 +333,16 @@ bool XMLReader::ReadField(uint32_t timeout)
     field_values[num_fields][itr] = '\0';
 
     // verify we've started the closing tag
-    if ('<' != new_char) return false;
+    if ('<' != new_char && !ReadSpecificChar(timeout, '<')) return false;
 
     // read closing field tag
     if (!ReadClosingTag(timeout, close_field, 8)) return false;
 
     // ensure the opening and closing field tags match
-    if (0 != strcmp(close_field, field_values[num_fields])) return false;
+    if (0 != strcmp(close_field, fields[num_fields])) return false;
+
+    // get the newline
+    if (!ReadSpecificChar(timeout, '\n')) return false;
 
     num_fields++;
     return true;
@@ -261,7 +376,7 @@ bool XMLReader::ReadVerifyCRC(uint32_t timeout)
     crc_value[itr] = '\0';
 
     // verify we've started the closing tag
-    if ('<' != new_char) return false;
+    if ('<' != new_char && !ReadSpecificChar(timeout, '<')) return false;
 
     // read and verify closing crc tag
     if (!ReadClosingTag(timeout, crc_tag, 4)) return false;
@@ -277,7 +392,7 @@ bool XMLReader::ReadVerifyCRC(uint32_t timeout)
 
 bool XMLReader::ReadBinarySection(uint32_t timeout)
 {
-    return false;
+    return true;
 }
 
 // --------------------------------------------------------
@@ -320,7 +435,11 @@ bool XMLReader::ReadOpeningTag(uint32_t timeout, char * buffer, uint8_t buff_siz
     // always null-terminate the buffer
     buffer[itr] = '\0';
 
-    return (new_char == '>');
+    if (new_char == '>') {
+        return true;
+    } else {
+        return ReadSpecificChar(timeout, '>');
+    }
 }
 
 // note: the leading '<' should already have been read before calling
@@ -347,5 +466,9 @@ bool XMLReader::ReadClosingTag(uint32_t timeout, char * buffer, uint8_t buff_siz
     // always null-terminate the buffer
     buffer[itr] = '\0';
 
-    return (new_char == '>');
+    if (new_char == '>') {
+        return true;
+    } else {
+        return ReadSpecificChar(timeout, '>');
+    }
 }

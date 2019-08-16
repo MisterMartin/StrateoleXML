@@ -47,6 +47,30 @@ enum ZephyrMessage_t {
     UNKNOWN
 };
 
+// used to index StratoCore mode functions
+enum InstMode_t {
+    MODE_STANDBY = 0,
+    MODE_FLIGHT = 1,
+    MODE_LOWPOWER = 2,
+    MODE_SAFETY = 3,
+    MODE_EOF = 4,
+    NUM_MODES = 5
+};
+
+struct GPSData_t {
+    float longitude;
+    float latitude;
+    float altitude;
+    float solar_zenith_angle;
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t second;
+    uint8_t quality;
+};
+
 class XMLReader {
 public:
     // constructors/destructors
@@ -59,7 +83,10 @@ public:
     // message results
     ZephyrMessage_t zephyr_message = NO_MESSAGE;
     uint16_t message_id = 0;
-    uint16_t binary_length = 0;
+    uint16_t tc_length = 0;
+    InstMode_t zephyr_mode = MODE_STANDBY;
+    bool zephyr_ack = false;
+    GPSData_t zephyr_gps = {0};
 
 private:
     // parsing functions
@@ -98,7 +125,6 @@ private:
 
     // internal buffers for message parts
     char message_buff[8] = {0};
-    char id_buff[8] = {0};
     char fields[8][8] = {{0}};
     char field_values[8][16] = {{0}};
     uint8_t num_fields = 0;
