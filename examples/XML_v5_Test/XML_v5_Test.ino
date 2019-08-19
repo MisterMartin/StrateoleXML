@@ -29,6 +29,8 @@ void loop()
       break;
     case TC:
       Serial.print("TC length: "); Serial.println(reader.tc_length);
+      Serial.print("Num TC's:  "); Serial.println(reader.num_tcs);
+      Serial.print("TC buffer: "); Serial.println(reader.tc_buffer);
       break;
     case GPS:
       Serial.print("Date: "); Serial.print(reader.zephyr_gps.year);

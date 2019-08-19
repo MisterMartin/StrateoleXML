@@ -25,7 +25,7 @@ bool XMLReader::ReadNextChar(char * new_char)
     uint16_t c;
     uint8_t ret_char, msb, lsb;
 
-    // make sure the new character is good, if not return failure
+    // make sure the new character is good, if not, return failure
     int read_ret = rx_stream->read();
     if (read_ret == -1) return false;
     ret_char = (uint8_t) read_ret;
@@ -60,8 +60,8 @@ void XMLReader::ResetReader()
 
 bool XMLReader::GetNewMessage()
 {
-    // set a 0.25 second timeout
-    uint32_t timeout = millis() + 1000;
+    // set a 0.1 second timeout
+    uint32_t timeout = millis() + 100;
     char read_char = '\0';
 
     // read the message type opening tag through the newline, verify the type
@@ -105,6 +105,9 @@ bool XMLReader::GetNewMessage()
 
     // parse the message
     if (!ParseMessage()) return false;
+
+    // Add an extra 0.1 seconds to the timeout for the binary section
+    timeout += 100;
 
     // read the binary section if it's a telecommand
     if (TC == zephyr_message && !ReadBinarySection(timeout)) {
@@ -182,7 +185,7 @@ bool XMLReader::ParseMessage()
 
         // get the binary length
         if (1 != sscanf(field_values[2], "%u", &utemp)) return false;
-        if (utemp > 1800) return false;
+        if (utemp > MAX_TC_SIZE) return false;
         tc_length = (uint16_t) utemp;
         break;
     default:
@@ -386,13 +389,63 @@ bool XMLReader::ReadVerifyCRC(uint32_t timeout)
     if (1 != sscanf(crc_value, "%u", &read_crc)) return false;
     if (read_crc > 65535) return false;
 
+    // get the trailing newline if it's there
+    if ('\n' == rx_stream->peek()) {
+        rx_stream->read();
+    }
+
     // return the CRC result
-    return true; //((uint16_t) read_crc == crc_result);
+    return true; // ((uint16_t) read_crc == crc_result);
 }
 
 bool XMLReader::ReadBinarySection(uint32_t timeout)
 {
-    return true;
+    uint16_t itr = 0;
+    uint16_t read_crc = 0;
+    char rx_char = '\0';
+
+    // read "START" from the stream
+    if (!ReadSpecificChar(timeout, 'S')) return false;
+    if (!ReadSpecificChar(timeout, 'T')) return false;
+    if (!ReadSpecificChar(timeout, 'A')) return false;
+    if (!ReadSpecificChar(timeout, 'R')) return false;
+    if (!ReadSpecificChar(timeout, 'T')) return false;
+
+    // reset CRC for the binary section
+    working_crc = crc_poly;
+
+    // read the binary section into the telecommand buffer
+    num_tcs = 0;
+    while (millis() < timeout && itr < tc_length) {
+        if (ReadNextChar(&rx_char)) {
+            tc_buffer[itr++] = rx_char;
+            if (';' == rx_char) num_tcs++;
+        }
+    }
+
+    // verify that we read all of the expected characters
+    if (itr != tc_length) return false;
+
+    // TC buffer is parsed as a char array string, so null-terminate it
+    tc_buffer[itr] = '\0';
+
+    // store the CRC result for comparison with the transmitted value
+    crc_result = working_crc;
+
+    // read the first CRC byte (LSB) from the stream
+    while (millis() < timeout && !ReadNextChar(&rx_char));
+    read_crc = (uint16_t) rx_char;
+
+    // read the second CRC byte (MSB) from the stream
+    while (millis() < timeout && !ReadNextChar(&rx_char));
+    read_crc |= (uint16_t) ((uint8_t) rx_char << 8);
+
+    // verify that the stream ends with "END"
+    if (!ReadSpecificChar(timeout, 'E')) return false;
+    if (!ReadSpecificChar(timeout, 'N')) return false;
+    if (!ReadSpecificChar(timeout, 'D')) return false;
+
+    return true; //read_crc == crc_result;
 }
 
 // --------------------------------------------------------

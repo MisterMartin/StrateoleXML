@@ -18,6 +18,10 @@
 #include <TimeLib.h>
 #include <stdint.h>
 
+// maximum telecommand size supported
+// note: 1800 is max for Zephyr
+#define MAX_TC_SIZE 1800
+
 // Message Types
 #define MSG_IM      "IM"
 #define MSG_SAck    "SAck"
@@ -80,13 +84,19 @@ public:
     // public interface function
     bool GetNewMessage();
 
-    // message results
+    // general message results
     ZephyrMessage_t zephyr_message = NO_MESSAGE;
     uint16_t message_id = 0;
-    uint16_t tc_length = 0;
+
+    // specific message results
     InstMode_t zephyr_mode = MODE_STANDBY;
     bool zephyr_ack = false;
     GPSData_t zephyr_gps = {0};
+
+    // telecommand results
+    char tc_buffer[MAX_TC_SIZE + 1] = {0};
+    uint16_t tc_length = 0;
+    uint8_t num_tcs = 0;
 
 private:
     // parsing functions
