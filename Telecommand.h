@@ -29,25 +29,18 @@ enum TCParseStatus_t {
 enum Telecommand_t : uint8_t {
     NO_TELECOMMAND = 0,
 
-    // Technosoft parameters
+    // MCB commands and parameters
     DEPLOYx = 1,
-    RETRACTx = 2,
-    DEPLOYv = 3,
-    RETRACTv = 4,
-    DEPLOYa = 5,
+    DEPLOYv = 2,
+    DEPLOYa = 3,
+    RETRACTx = 4,
+    RETRACTv = 5,
     RETRACTa = 6,
-    POSERRLIM = 7,
-    CURRLIM = 8,
-    I2TLIM = 9,
-
-    // MCB Parameters
-    MINMCBTEMP = 30,
-    MAXMCBTEMP = 31,
-    LOWVOLTLIM = 32,
-    HIGHVOLTLIM = 33,
-    FULLRETRACT = 34,
-    UDOCK = 35,
-    CANCELMOTION = 36,
+    DOCKx = 7,
+    DOCKv = 8,
+    DOCKa = 9,
+    FULLRETRACT = 10,
+    CANCELMOTION = 11,
 
     // DIB Parameters
     MINDIBTEMP = 60,
@@ -83,8 +76,10 @@ enum Telecommand_t : uint8_t {
     SETLASERTEMP = 107, // Target laser temp
     SETHKPERIOD = 108, // Time in minutes
     SETFLUSH = 109, // Time in seconds for air flush
-    SETSAMPLEAVG = 110 // Values to average from PHA
+    SETSAMPLEAVG = 110, // Values to average from PHA
 
+    // Generic instrument commands
+    RESET_INST = 200,
 };
 
 struct DIB_Param_t {
@@ -118,30 +113,14 @@ struct LPC_Param_t {
 
 struct MCB_Param_t {
     float deployLen;
-    float retractLen;
     float deployVel;
-    float retractVel;
     float deployAcc;
+    float retractLen;
+    float retractVel;
     float retractAcc;
-    float positionErr;
-    float reportedPosition;
-    float minTemp;
-    float maxTemp;
-    float reportedTemp[6];
-    float lowVoltLim;
-    float highVoltLim;
-    float reportedVoltage[4];
-    uint8_t lowPowMode;
-    uint8_t fullRetract;
-    float dock; // left as float for distance, may not be used
-    uint8_t telemRequest;
-    uint8_t ackVal;
-    uint8_t mcbState;
-    uint8_t mcbSerial;
-    float spoolLevel;
-    float current[4];
-    float brake;
-    float torque[2];
+    float dockLen;
+    float dockVel;
+    float dockAcc;
 };
 
 #endif /* TELECOMMAND_H */

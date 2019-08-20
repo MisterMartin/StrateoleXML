@@ -19,49 +19,100 @@
 TCParseStatus_t XMLReader::GetTelecommand()
 {
     uint8_t telecommand = NO_TELECOMMAND;
-    uint8_t test_array[2] = {0};
-    float float_array[2] = {0};
 
+    // make sure there are still TCs in the buffer
     if (curr_tc++ == num_tcs) {
         return NO_TCs;
     }
 
+    // read the telecommand number
     if (!Get_uint8(&telecommand, 1)) {
         ClearTC();
         return TC_ERROR;
     }
 
-    Serial.print("TC: "); Serial.println(telecommand);
+    if (!ParseTelecommand(telecommand)) {
+        ClearTC();
+        return TC_ERROR;
+    } else {
+        return READ_TC;
+    }
+}
 
+// get the telecommand parameters, if any
+bool XMLReader::ParseTelecommand(uint8_t telecommand)
+{
     switch (telecommand) {
-    case 1:
-        if (Get_uint8(test_array,1)) {
-            Serial.print("Result: "); Serial.println(test_array[0]);
-        } else {
-            Serial.println("Read error");
-        }
+    // MCB Parameters -------------------------------------
+    case DEPLOYx:
+        if (!Get_float(&(mcbParam.deployLen),1)) return false;
         break;
-    case 2:
-        if (Get_uint8(test_array,2)) {
-            Serial.print("Result: "); Serial.println(test_array[0]);
-            Serial.print("Result: "); Serial.println(test_array[1]);
-        } else {
-            Serial.println("Read error");
-        }
+    case DEPLOYv:
+        if (!Get_float(&(mcbParam.deployVel),1)) return false;
         break;
-    case 3:
-        if (Get_float(float_array,2)) {
-            Serial.print("Result: "); Serial.println(float_array[0]);
-            Serial.print("Result: "); Serial.println(float_array[1]);
-        } else {
-            Serial.println("Read error");
-        }
+    case DEPLOYa:
+        if (!Get_float(&(mcbParam.deployAcc),1)) return false;
         break;
+    case RETRACTx:
+        if (!Get_float(&(mcbParam.retractLen),1)) return false;
+        break;
+    case RETRACTv:
+        if (!Get_float(&(mcbParam.retractVel),1)) return false;
+        break;
+    case RETRACTa:
+        if (!Get_float(&(mcbParam.retractAcc),1)) return false;
+        break;
+    case DOCKx:
+        if (!Get_float(&(mcbParam.dockLen),1)) return false;
+        break;
+    case DOCKv:
+        if (!Get_float(&(mcbParam.dockVel),1)) return false;
+        break;
+    case DOCKa:
+        if (!Get_float(&(mcbParam.dockAcc),1)) return false;
+        break;
+    // LPC Parameters -------------------------------------
+    case SETSAMPLE:
+        if (!Get_uint16(&(lpcParam.samples),1)) return false;
+        break;
+    case SETWARMUPTIME:
+        if (!Get_uint16(&(lpcParam.warmUpTime),1)) return false;
+        break;
+    case SETCYCLETIME:
+        if (!Get_uint8(&(lpcParam.setCycleTime),1)) return false;
+        break;
+    case SETHGBINS:
+        if (!Get_uint8(lpcParam.newHGBins,24)) return false;
+        break;
+    case SETLGBINS:
+        if (!Get_uint8(lpcParam.newLGBins,24)) return false;
+        break;
+    case SETLASERTEMP:
+        if (!Get_uint8(&(lpcParam.setLaserTemp),1)) return false;
+        break;
+    case SETFLUSH:
+        if (!Get_uint8(&(lpcParam.lpc_flush),1)) return false;
+        break;
+    case SETSAMPLEAVG:
+        if (!Get_uint16(&(lpcParam.samplesToAverage),1)) return false;
+        break;
+    // DIB Parameters -------------------------------------
+    case FTRONTIME:
+        if (!Get_uint16(&(dibParam.ftrOnTime),1)) return false;
+        break;
+    case FTRCYCLETIME:
+        if (!Get_uint16(&(dibParam.ftrCycleTime),1)) return false;
+        break;
+    // PIB Parameters -------------------------------------
+    case SETDWELLTIME:
+        if (!Get_uint8(&(pibParam.dwellTime),1)) return false;
+        break;
+    // Messages without parameters ------------------------
     default:
         break;
     }
 
-    return READ_TC;
+    return true;
 }
 
 // --------------------------------------------------------

@@ -44,7 +44,7 @@ enum ZephyrMessage_t {
     TMAck, // Telemetry Acknowledge
     TC,    // Telecommand
     GPS,   // GPS Data
-    NO_MESSAGE,
+    NO_ZEPHYR_MSG,
     UNKNOWN
 };
 
@@ -83,7 +83,7 @@ public:
     TCParseStatus_t GetTelecommand(); // implemented in Telecommand.cpp
 
     // general message results
-    ZephyrMessage_t zephyr_message = NO_MESSAGE;
+    ZephyrMessage_t zephyr_message = NO_ZEPHYR_MSG;
     uint16_t message_id = 0;
 
     // specific message results
@@ -99,6 +99,7 @@ public:
     DIB_Param_t dibParam = {0};
     PIB_Param_t pibParam = {0};
     LPC_Param_t lpcParam = {0};
+    MCB_Param_t mcbParam = {0};
 
 private:
     // parsing functions
@@ -122,6 +123,9 @@ private:
 
     // after every message or error
     void ResetReader();
+
+    // called for each message, gets parameters (if any) from the tc_buffer
+    bool ParseTelecommand(uint8_t telecommand);
 
     // telecommand parsing utilities (implemented in Telecommand.cpp)
     bool Get_uint8(uint8_t * ret_array, uint8_t num_elements);
