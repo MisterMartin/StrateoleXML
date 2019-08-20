@@ -14,13 +14,10 @@
 #ifndef XMLREADER_H
 #define XMLREADER_H
 
+#include "Telecommand.h"
 #include "Arduino.h"
 #include <TimeLib.h>
 #include <stdint.h>
-
-// maximum telecommand size supported
-// note: 1800 is max for Zephyr
-#define MAX_TC_SIZE 1800
 
 // Message Types
 #define MSG_IM      "IM"
@@ -81,8 +78,9 @@ public:
     XMLReader(Stream * rxstream, Instrument_t inst);
     ~XMLReader() { };
 
-    // public interface function
+    // public interface functions
     bool GetNewMessage();
+    TCParseStatus_t GetTelecommand(); // implemented in Telecommand.cpp
 
     // general message results
     ZephyrMessage_t zephyr_message = NO_MESSAGE;
@@ -94,9 +92,13 @@ public:
     GPSData_t zephyr_gps = {0};
 
     // telecommand results
+    Telecommand_t zephyr_tc = NO_TELECOMMAND;
     char tc_buffer[MAX_TC_SIZE + 1] = {0};
     uint16_t tc_length = 0;
     uint8_t num_tcs = 0;
+    DIB_Param_t dibParam = {0};
+    PIB_Param_t pibParam = {0};
+    LPC_Param_t lpcParam = {0};
 
 private:
     // parsing functions
@@ -121,6 +123,16 @@ private:
     // after every message or error
     void ResetReader();
 
+    // telecommand parsing utilities (implemented in Telecommand.cpp)
+    bool Get_uint8(uint8_t * ret_array, uint8_t num_elements);
+    bool Get_uint16(uint16_t * ret_array, uint8_t num_elements);
+    bool Get_uint32(uint32_t * ret_array, uint8_t num_elements);
+    bool Get_int8(int8_t * ret_array, uint8_t num_elements);
+    bool Get_int16(int16_t * ret_array, uint8_t num_elements);
+    bool Get_int32(int32_t * ret_array, uint8_t num_elements);
+    bool Get_float(float * ret_array, uint8_t num_elements);
+    void ClearTC(); // clears the rest of an errant TC
+
     // serial port for Strateole on-board computer
     Stream * rx_stream;
 
@@ -138,6 +150,10 @@ private:
     char fields[8][8] = {{0}};
     char field_values[8][16] = {{0}};
     uint8_t num_fields = 0;
+
+    // internal telecommand tracking
+    uint8_t curr_tc = 0;
+    uint16_t tc_index = 0;
 
 };
 

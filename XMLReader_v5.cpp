@@ -49,6 +49,8 @@ void XMLReader::ResetReader()
     working_crc = crc_poly;
     crc_result = 0;
     num_fields = 0;
+    tc_index = 0;
+    curr_tc = 0;
 
     // null-terminate all buffer first characters
     message_buff[0] = '\0';
@@ -395,7 +397,7 @@ bool XMLReader::ReadVerifyCRC(uint32_t timeout)
     }
 
     // return the CRC result
-    return true; // ((uint16_t) read_crc == crc_result);
+    return true; //((uint16_t) read_crc == crc_result);
 }
 
 bool XMLReader::ReadBinarySection(uint32_t timeout)
