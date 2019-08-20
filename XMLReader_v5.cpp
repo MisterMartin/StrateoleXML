@@ -9,6 +9,8 @@
  * The reader uses the serial buffers internal to the Arduino software core,
  * and this reader is designed for use on the Teensy 3.6, for which it is easy
  * and necessary to modify the core to increase the size of these buffers.
+ *
+ * Version 5 is a complete re-design of the XMLReader
  */
 
 #include "XMLReader_v5.h"
