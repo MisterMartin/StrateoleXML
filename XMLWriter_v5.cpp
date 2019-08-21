@@ -16,38 +16,37 @@
  *
  *  * Version 3 adds DIB/MCB Communications
  *  * Version 4 updates the interface for StratoCore
- *  * Version 5 removes DIB/MCB Communications and adds a bigger, safe buffer
+ *  * Version 5 removes DIB/MCB Communications, cleans the interface, and
+ *              adds bigger, safer, more efficient bufferering
  *
  *  This code has the following dependencies:
  *
- *  "CircularBuffer.h"
+ *  "SafeBuffer.h"
  *	"Arduino.h"
  */
 
-#include "Arduino.h"
 #include <XMLWriter_v5.h>
-//#define CRC_DEBUG
-//#define TM_DEBUG
 
 const uint16_t reset_crc = 0x1021;
-CircularBuffer<uint8_t, TXBUFSIZE> txbuf; // Software buffer
 
 // Constant Device Information
 char swDate[] = "20170901,000000";
-
 char swVer[] = "0.1";
-
 char Zproto[] = "1.0";
 
-uint16_t messCount = 1;
+// --------------------------------------------------------
+// Constructor and reset
+// --------------------------------------------------------
 
 #ifdef LOG
 XMLWriter::XMLWriter(Print* stream, Print* log, Instrument_t inst)
+    : tm_buffer(tm_buffer_array, TMBUF_MAXSIZE)
 {
     _log = log;
     _log->println("Written messages with be logged.");
 #else
 XMLWriter::XMLWriter(Print* stream, Instrument_t inst)
+    : tm_buffer(tm_buffer_array, TMBUF_MAXSIZE)
 {
 #endif
     instrument = inst;
@@ -57,10 +56,14 @@ XMLWriter::XMLWriter(Print* stream, Instrument_t inst)
 
 void XMLWriter::reset()
 {
-    rx_crc = reset_crc;
-    txbuf.clear();
+    tx_crc = reset_crc;
+    tm_buffer.Clear();
 }
-//Call to set names of state flags
+
+// --------------------------------------------------------
+// Telemetry state fields functions
+// --------------------------------------------------------
+
 void XMLWriter::setStateFlags(uint8_t num, String flag)
 {
     if (num == 1) {
@@ -72,7 +75,6 @@ void XMLWriter::setStateFlags(uint8_t num, String flag)
     }
 }
 
-//Call to set values of state flags
 void XMLWriter::setStateFlagValue(uint8_t num, StateFlag_t stat)
 {
     if (num == 1) {
@@ -84,7 +86,6 @@ void XMLWriter::setStateFlagValue(uint8_t num, StateFlag_t stat)
     }
 }
 
-//Call to set value of details
 void XMLWriter::setStateDetails(uint8_t num, String details)
 {
     if (num == 1) {
@@ -96,78 +97,82 @@ void XMLWriter::setStateDetails(uint8_t num, String details)
     }
 }
 
+// --------------------------------------------------------
+// Tag functions
+// --------------------------------------------------------
+
 void XMLWriter::tagOpen(const char* tag)
 {
-    crcUpdate('<');
-    crcUpdate(tag);
-    crcUpdate('>');
-    crcUpdate('\n');
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC('\n');
 }
 
 void XMLWriter::tagClose(const char* tag)
 {
-    crcUpdate('<');
-    crcUpdate('/');
-    crcUpdate(tag);
-    crcUpdate('>');
-    // if CRC problems, REPLACE following crcUpdate('\n')
-    // with txbuf.push('\n');
-    // Lars and Doug, look here!!
-    //txbuf.push('\n');
-    crcUpdate('\n');
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC('/');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC('\n');
 }
 
+// --------------------------------------------------------
+// Overloaded node write functions
+// --------------------------------------------------------
+
 void XMLWriter::writeNode(const char* tag, const char* value)
-{ //string
-    crcUpdate('\t');
-    crcUpdate('<');
-    crcUpdate(tag);
-    crcUpdate('>');
-    crcUpdate(value);
-    crcUpdate('<');
-    crcUpdate('/');
-    crcUpdate(tag);
-    crcUpdate('>');
-    crcUpdate('\n');
+{
+    writeAndUpdateCRC('\t');
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC(value);
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC('/');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC('\n');
 }
 
 void XMLWriter::writeNode(const char* tag, String value)
-{ //string
+{
     writeNode(tag, value.c_str());
 }
 
 void XMLWriter::writeNode(const char* tag, char* value, uint8_t length)
-{ //char array
-    crcUpdate('\t');
-    crcUpdate('<');
-    crcUpdate(tag);
-    crcUpdate('>');
+{
+    writeAndUpdateCRC('\t');
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
     for (uint8_t i = 0; i < length; i++) {
         if (value[i] != 0) {
-            crcUpdate(value[i]);
+            writeAndUpdateCRC(value[i]);
         } else {
             break;
         }
     }
-    crcUpdate('<');
-    crcUpdate('/');
-    crcUpdate(tag);
-    crcUpdate('>');
-    crcUpdate('\n');
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC('/');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC('\n');
 }
 
 void XMLWriter::writeNode(const char* tag, uint8_t value)
 {
-    crcUpdate('\t');
-    crcUpdate('<');
-    crcUpdate(tag);
-    crcUpdate('>');
-    crcUpdate(value);
-    crcUpdate('<');
-    crcUpdate('/');
-    crcUpdate(tag);
-    crcUpdate('>');
-    crcUpdate('\n');
+    writeAndUpdateCRC('\t');
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC(value);
+    writeAndUpdateCRC('<');
+    writeAndUpdateCRC('/');
+    writeAndUpdateCRC(tag);
+    writeAndUpdateCRC('>');
+    writeAndUpdateCRC('\n');
 }
 
 void XMLWriter::writeNode(String tag, String value)
@@ -180,41 +185,41 @@ void XMLWriter::writeNode(String tag, const char* value)
     writeNode(tag.c_str(), value);
 }
 
+// --------------------------------------------------------
+// CRC control functions
+// --------------------------------------------------------
+
+void XMLWriter::crcReset()
+{
+    tx_crc = reset_crc;
+}
+
+uint16_t XMLWriter::crcValue()
+{
+    return tx_crc;
+}
+
 void XMLWriter::writeCRC()
 {
     _stream->print("<CRC>");
-    _stream->print(rx_crc, DEC);
+    _stream->print(tx_crc, DEC);
     _stream->print("</CRC>\n");
 #ifdef LOG
     _log->print("<CRC>");
-    _log->print(rx_crc, DEC);
+    _log->print(tx_crc, DEC);
     _log->print("</CRC>\n");
 #endif
     crcReset();
-    //_stream->flush();
 }
 
-void XMLWriter::sendBuf()
-{
-    uint8_t ret;
-    for (uint8_t i = 0; i < TXBUFSIZE; i++) {
-        ret = txbuf.shift();
-        _stream->print((char)ret);
-#ifdef LOG
-        _log->print((char)ret);
-#endif
-        if (txbuf.isEmpty()) {
-            break;
-        }
-    }
-    txbuf.clear();
-    _stream->flush();
-}
+// --------------------------------------------------------
+// Send over serial and update the CRC
+// --------------------------------------------------------
 
-uint16_t XMLWriter::crcUpdate(uint8_t* data, uint8_t length)
+void XMLWriter::writeAndUpdateCRC(uint8_t* data, uint8_t length)
 {
-    if (length == 0 || data == 0) {
-        return 1;
+    if (length == 0 || data == NULL) {
+        return;
     }
     uint16_t c;
     uint8_t x;
@@ -223,12 +228,12 @@ uint16_t XMLWriter::crcUpdate(uint8_t* data, uint8_t length)
         if ((x == 0) & (c != 0)) {
             break;
         }
-        crcUpdate(x);
+        writeAndUpdateCRC(x);
     }
-    return 0;
+    return;
 }
 
-uint16_t XMLWriter::crcUpdate(const char* data)
+void XMLWriter::writeAndUpdateCRC(const char* data)
 {
     uint16_t c;
     uint8_t x;
@@ -237,39 +242,31 @@ uint16_t XMLWriter::crcUpdate(const char* data)
         if ((x == 0) & (c != 0)) {
             break;
         }
-        crcUpdate(x);
+        writeAndUpdateCRC(x);
     }
-    return 0;
+    return;
 }
 
-uint16_t XMLWriter::crcUpdate(uint8_t data)
+void XMLWriter::writeAndUpdateCRC(uint8_t data)
 {
-    uint8_t msb = rx_crc >> 8;
-    uint8_t lsb = rx_crc & 255;
+    uint8_t msb = tx_crc >> 8;
+    uint8_t lsb = tx_crc & 255;
     uint16_t c;
-    txbuf.push(data);
+    _stream->write(data);
+#ifdef LOG
+    _log->write(data);
+#endif
     c = data ^ msb;
     c ^= (c >> 4);
     msb = (lsb ^ (c >> 3) ^ (c << 4)) & 255;
     lsb = (c ^ (c << 5)) & 255;
-    rx_crc = (msb << 8) + lsb;
-#ifdef CRC_DEBUG
-    _log->print(rx_crc);
-    _log->print(' ');
-    _log->println((char)data);
-#endif
-    return 0;
+    tx_crc = (msb << 8) + lsb;
+    return;
 }
 
-void XMLWriter::crcReset()
-{
-    rx_crc = reset_crc;
-}
-
-uint16_t XMLWriter::crcValue()
-{
-    return rx_crc;
-}
+// --------------------------------------------------------
+// Write specific fields
+// --------------------------------------------------------
 
 uint16_t XMLWriter::msgNode()
 {
@@ -289,6 +286,10 @@ void XMLWriter::instNode()
     writeNode("Inst", temp.c_str());
 }
 
+// --------------------------------------------------------
+// Send specific Zephyr messages
+// --------------------------------------------------------
+
 void XMLWriter::IMR()
 {
     tagOpen("IMR");
@@ -298,23 +299,6 @@ void XMLWriter::IMR()
     writeNode("SWVersion", swVer);
     writeNode("ZProtocolVersion", Zproto);
     tagClose("IMR");
-    sendBuf();
-    writeCRC();
-}
-
-void XMLWriter::IMAck(uint8_t ackval)
-{
-    tagOpen("IMAck");
-    msgNode();
-    instNode();
-    if (ackval) {
-        writeNode("Ack", "ACK");
-    } else {
-        writeNode("Ack", "NACK");
-    }
-
-    tagClose("IMAck");
-    sendBuf();
     writeCRC();
 }
 
@@ -324,7 +308,6 @@ void XMLWriter::S()
     msgNode();
     instNode();
     tagClose("S");
-    sendBuf();
     writeCRC();
 }
 
@@ -343,37 +326,45 @@ void XMLWriter::RA()
     msgNode();
     writeNode("Inst", "RACHUTS");
     tagClose("RA");
-    sendBuf();
     writeCRC();
 }
-// Pass by reference is buggy
-/* void XMLWriter::TM(uint8_t bin[], uint16_t len){
-	tagOpen("TM");
-	msgNode();
+
+void XMLWriter::IMAck(bool ackval)
+{
+    tagOpen("IMAck");
+    msgNode();
     instNode();
-    sendTMBody();
-	String buf = String(len);
-	writeNode("Length",buf.c_str());
-	tagClose("TM");
-	#ifdef LOG
-	_log->print("Number of items in buffer: ");
-	_log->println(txbuf.size());
-	#endif
-	sendBuf();
-	writeCRC();
-	if(!bin || !len){
-		#ifdef LOG
-		_log->print("May have null pointer");
-		#endif
-		return;
-	} else {
-		sendBin(bin,len);
-	}
-} */
+    if (ackval) {
+        writeNode("Ack", "ACK");
+    } else {
+        writeNode("Ack", "NACK");
+    }
+
+    tagClose("IMAck");
+    writeCRC();
+}
+
+void XMLWriter::TCAck(bool ackval)
+{
+    tagOpen("TCAck");
+    msgNode();
+    instNode();
+    if (ackval) {
+        writeNode("Ack", "ACK");
+    } else {
+        writeNode("Ack", "NACK");
+    }
+    tagClose("TCAck");
+    writeCRC();
+}
+
+// --------------------------------------------------------
+// Send telemetry messages
+// --------------------------------------------------------
 
 void XMLWriter::TM()
 {
-    if (!tmbuf_len) {
+    if (0 == tm_buffer.NumElements()) {
         TMhouse();
         return;
     }
@@ -381,16 +372,15 @@ void XMLWriter::TM()
     msgNode();
     instNode();
     sendTMBody();
-    String buf = String(tmbuf_len);
+    String buf = String(tm_buffer.NumElements());
     writeNode("Length", buf.c_str());
     tagClose("TM");
 #ifdef LOG
     _log->print("Number of items in telemetry buffer: ");
-    _log->println(tmbuf_len);
+    _log->println(tm_buffer.NumElements());
 #endif
-    sendBuf();
     writeCRC();
-    if (tmbuf_len) {
+    if (0 != tm_buffer.NumElements()) {
         sendBin();
     }
 }
@@ -417,7 +407,6 @@ void XMLWriter::TM_String(StateFlag_t state_flag, const char * message)
 
     writeNode("Length", "0"); // no binary
     tagClose("TM");
-    sendBuf();
     writeCRC();
     sendEmptyBin(); // expected, even if empty
 }
@@ -432,7 +421,6 @@ void XMLWriter::TMhouse()
 
     writeNode("Length", "0");
     tagClose("TM");
-    sendBuf();
     writeCRC();
     _stream->print("START");
     _log->print("START");
@@ -446,43 +434,6 @@ void XMLWriter::TMhouse()
     _log->print("END");
 }
 
-/* void XMLWriter::sendBin(uint8_t * bin, uint16_t len){
-	// Calling function does proper input check
-	crcReset();
-	_stream->print("START");
-	#ifdef LOG
-	_log->print("START");
-	#endif
-	for(uint8_t i = 0; i < len; i++){
-		crcUpdate(bin[i]);
-	}
-	uint16_t binCrc = rx_crc;
-	uint8_t send;
-	sendBuf();
-	crcReset();
-	// IF you encounter problems with the OBC accepting
-	// the sections below (1 & 2) will need to be flipped
-	// This will send the LSB before the MSB
-	//1
-	send = binCrc>>8;
-	_stream->write((byte)send);
-	#ifdef LOG
-	_log->write((byte)send);
-	#endif
-	//2
-	send = (binCrc & (0x00FF));
-	_stream->write((byte)send);
-	#ifdef LOG
-	_log->write((byte)send);
-	#endif
-	//end
-	_stream->print("END");
-	#ifdef LOG
-	_log->println(binCrc);
-	_log->println("END");
-	#endif
-} */
-
 void XMLWriter::sendBin()
 {
     // Calling function does proper input check
@@ -491,42 +442,36 @@ void XMLWriter::sendBin()
 #ifdef LOG
     _log->print("START");
 #endif
+
     uint8_t inchar;
-    for (uint8_t i = 0; i < tmbuf_len; i++) {
-        if (!tmbuf.isEmpty()) {
-            inchar = tmbuf.shift();
-            crcUpdate(inchar);
-        } else {
-            break;
-        }
+    while (tm_buffer.Pop(&inchar)) {
+        writeAndUpdateCRC(inchar);
     }
-    tmbuf_len = 0;
-    uint16_t binCrc = rx_crc;
+
+    uint16_t binCrc = tx_crc;
     uint8_t send;
-    sendBuf();
     crcReset();
-    // IF you encounter problems with the OBC accepting
-    // the sections below (1 & 2) will need to be flipped
-    // This will send the LSB before the MSB
-    //1
+
     send = binCrc >> 8;
     _stream->write((byte)send);
-    //2
     send = (binCrc & (0x00FF));
     _stream->write((byte)send);
-    //end
+
     _stream->print("END");
 #ifdef LOG
     _log->println();
     _log->println(binCrc, HEX);
     _log->println("END");
 #endif
+
+    reset();
+
     return;
 }
 
 void XMLWriter::sendEmptyBin()
 {
-    uint16_t binCrc = rx_crc;
+    uint16_t binCrc = tx_crc;
     uint8_t send;
 
     // Calling function does proper input check
@@ -548,21 +493,6 @@ void XMLWriter::sendEmptyBin()
     _log->println(binCrc, HEX);
     _log->println("END");
 #endif
-}
-
-void XMLWriter::TCAck(uint8_t ackval)
-{
-    tagOpen("TCAck");
-    msgNode();
-    instNode();
-    if (ackval) {
-        writeNode("Ack", "ACK");
-    } else {
-        writeNode("Ack", "NACK");
-    }
-    tagClose("TCAck");
-    sendBuf();
-    writeCRC();
 }
 
 void XMLWriter::sendTMBody()
@@ -632,83 +562,47 @@ void XMLWriter::sendTMBody()
     }
 }
 
-// Interacting with telemetry buffer
-uint8_t XMLWriter::addTm(uint8_t inChar)
+// --------------------------------------------------------
+// Telemetry buffer interface functions
+// --------------------------------------------------------
+
+bool XMLWriter::addTm(uint8_t inChar)
 {
-    if (tmbuf_len < TXBUFSIZE) {
-        tmbuf.push(inChar);
-#ifdef TM_DEBUG
-        _stream->print(inChar);
-#endif
-        tmbuf_len++;
-        return 0;
-    } else {
-        return 1;
-    }
+    return tm_buffer.Push(inChar);
 }
 
-uint8_t XMLWriter::addTm(uint16_t inWord)
+bool XMLWriter::addTm(uint16_t inWord)
 {
     uint8_t outChar;
-    if (tmbuf_len + 1 < TXBUFSIZE) {
 
-        outChar = inWord >> 8;
-        tmbuf.push(outChar);
-#ifdef TM_DEBUG
-        _stream->print(outChar);
-#endif
-        tmbuf_len++;
+    outChar = inWord >> 8;
+    if (!tm_buffer.Push(outChar)) return false;
 
-        outChar = (inWord & 0xFF);
-        tmbuf.push((uint8_t)outChar);
-#ifdef TM_DEBUG
-        _stream->print(outChar);
-#endif
-        tmbuf_len++;
+    outChar = (inWord & 0xFF);
+    return tm_buffer.Push(outChar);
 
-        return 0;
-    } else {
-        return 1;
-    }
 }
 
-uint8_t XMLWriter::addTm(uint32_t inDouble)
+bool XMLWriter::addTm(uint32_t inDouble)
 {
     uint8_t outChar;
-    if (tmbuf_len + 3 < TXBUFSIZE) {
-        outChar = inDouble >> 24;
-        tmbuf.push(outChar);
-#ifdef TM_DEBUG
-        _stream->print(outChar);
-#endif
-        tmbuf_len++;
-        outChar = ((inDouble >> 16) & 0x000000FF);
-        tmbuf.push(outChar);
-#ifdef TM_DEBUG
-        _stream->print(outChar);
-#endif
-        tmbuf_len++;
-        outChar = ((inDouble >> 8) & 0x000000FF);
-        tmbuf.push(outChar);
-#ifdef TM_DEBUG
-        _stream->print(outChar);
-#endif
-        tmbuf_len++;
-        outChar = ((inDouble) & 0x000000FF);
-        tmbuf.push(outChar);
-#ifdef TM_DEBUG
-        _stream->print(outChar);
-#endif
-        tmbuf_len++;
-        return 0;
-    } else {
-        return 1;
-    }
+
+    outChar = inDouble >> 24;
+    if (!tm_buffer.Push(outChar)) return false;
+
+    outChar = ((inDouble >> 16) & 0x000000FF);
+    if (!tm_buffer.Push(outChar)) return false;
+
+    outChar = ((inDouble >> 8) & 0x000000FF);
+    if (!tm_buffer.Push(outChar)) return false;
+
+    outChar = ((inDouble) & 0x000000FF);
+    return tm_buffer.Push(outChar);
 }
 
-uint8_t XMLWriter::addTm(String inStr)
+bool XMLWriter::addTm(String inStr)
 {
-    uint8_t err = 0;
+    bool err = false;
     for (uint8_t i = 0; i < inStr.length(); i++) {
         err = addTm((uint8_t)inStr.charAt(i));
 #ifdef TM_DEBUG
@@ -720,46 +614,47 @@ uint8_t XMLWriter::addTm(String inStr)
     return err;
 }
 
-uint8_t XMLWriter::addTmTemp(float tempFloat)
+bool XMLWriter::addTm(const uint8_t * buffer, uint16_t size)
 {
-    uint16_t tempInt = tempFloat2Bin(tempFloat);
-    uint8_t ret = addTm(tempInt);
-    return ret;
+    if (NULL == buffer) return false;
+
+    for (uint16_t i = 0; i < size; i++) {
+        if (!tm_buffer.Push(buffer[i])) return false;
+    }
+
+    return true;
 }
 
-uint8_t XMLWriter::addTmGPS(float gpsFloat)
+bool XMLWriter::addTmTemp(float tempFloat)
+{
+    uint16_t tempInt = tempFloat2Bin(tempFloat);
+    return addTm(tempInt);
+}
+
+bool XMLWriter::addTmGPS(float gpsFloat)
 {
     uint32_t gpsInt = latLongFloat2Bin(gpsFloat);
     uint8_t err = addTm((uint8_t)(gpsInt >> 16));
     if (err) {
         return 1;
     }
-    err = addTm((uint16_t)(gpsInt & 0x0000FFFF));
-    return err;
+    return addTm((uint16_t)(gpsInt & 0x0000FFFF));
 }
 
-uint8_t XMLWriter::addTmVolt(uint16_t voltInt)
+bool XMLWriter::addTmVolt(uint16_t voltInt)
 {
     uint8_t voltBin = voltInt2Short(voltInt);
-    uint8_t err = addTm(voltBin);
-    return err;
-}
-
-uint8_t XMLWriter::remTm()
-{
-    tmbuf_len--;
-    return tmbuf.shift();
+    return addTm(voltBin);
 }
 
 void XMLWriter::clearTm()
 {
-    tmbuf.clear();
-    tmbuf_len = 0;
+    tm_buffer.Clear();
 }
 
 uint16_t XMLWriter::getTmLen()
 {
-    return tmbuf_len;
+    return tm_buffer.NumElements();
 }
 
 // END OF FILE

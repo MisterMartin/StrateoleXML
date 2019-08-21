@@ -18,7 +18,7 @@
 
 TCParseStatus_t XMLReader::GetTelecommand()
 {
-    uint8_t telecommand = NO_TELECOMMAND;
+    zephyr_tc = NO_TELECOMMAND;
 
     // make sure there are still TCs in the buffer
     if (curr_tc++ == num_tcs) {
@@ -26,12 +26,12 @@ TCParseStatus_t XMLReader::GetTelecommand()
     }
 
     // read the telecommand number
-    if (!Get_uint8(&telecommand, 1)) {
+    if (!Get_uint8((uint8_t *) &zephyr_tc, 1)) {
         ClearTC();
         return TC_ERROR;
     }
 
-    if (!ParseTelecommand(telecommand)) {
+    if (!ParseTelecommand(zephyr_tc)) {
         ClearTC();
         return TC_ERROR;
     } else {

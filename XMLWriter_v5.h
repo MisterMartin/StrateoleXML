@@ -16,28 +16,28 @@
  *
  *  * Version 3 adds DIB/MCB Communications
  *  * Version 4 updates the interface for StratoCore
- *  * Version 5 removes DIB/MCB Communications and adds a bigger, safe buffer
+ *  * Version 5 removes DIB/MCB Communications, cleans the interface, and
+ *              adds bigger, safer, more efficient bufferering
  *
  *  This code has the following dependencies:
  *
- *  "CircularBuffer.h"
+ *  "SafeBuffer.h"
  *	"Arduino.h"
- *    Time.h"
- *    #<BitPacking.h>
+ *  "Time.h"
+ *  <BitPacking.h>
  */
 
 #ifndef XMLWRITER_H
 #define XMLWRITER_H
 
 #include "InstInfo.h"
+#include "SafeBuffer.h"
 #include "Arduino.h"
 #include "Time.h"
 #include <BitPacking.h>
-#include <CircularBuffer.h>
-//#include "FloatsHealth.h"
 
-#define TXBUFSIZE (865) // TODO: resize
-#define LOG
+#define TMBUF_MAXSIZE   8192
+//#define LOG
 
 enum StateFlag_t {
     UNKN,
@@ -55,36 +55,43 @@ public:
     XMLWriter(Print* stream, Instrument_t inst);
 #endif
 
-    void reset();
-
-    //Call to set names of state flags
+    // Call to set names of state flags
     void setStateFlags(uint8_t num, String flag);
 
-    //Call to set values of state flags
+    // Call to set values of state flags
     void setStateFlagValue(uint8_t num, StateFlag_t stat);
 
-    //Call to set value of details
+    // Call to set value of details
     void setStateDetails(uint8_t num, String details);
 
-    // <tag>
-    void tagOpen(const char* tag);
-    // </tag>
-    void tagClose(const char* tag);
+    // Send specific messages
+    void IMR();
+    void S();
+    void RA();
+    void IMAck(bool ackval);
+    void TCAck(bool ackval);
 
-    // <tag>value</tag>
-    void writeNode(const char* tag, const char* value); //string
+    // Telemetry packet
+    void TM();
+    void TM_String(StateFlag_t state_flag, const char * message);
 
-    void writeNode(const char* tag, String value);
+    // Housekeeping Telemetry packet
+    void TMhouse();
 
-    void writeNode(const char* tag, char* value, uint8_t length); //char array
+    // Interacting with telemetry buffer
+    bool addTm(uint8_t inChar);
+    bool addTm(uint16_t inWord);
+    bool addTm(uint32_t inDouble);
+    bool addTm(String inStr);
+    bool addTm(const uint8_t * buffer, uint16_t size);
+    bool addTmTemp(float tempFloat);
+    bool addTmGPS(float gpsFloat);
+    bool addTmVolt(uint16_t voltInt);
+    void clearTm();
+    uint16_t getTmLen();
 
-    void writeNode(const char* tag, uint8_t value);
-
-    void writeNode(String tag, String value);
-
-    void writeNode(String tag, const char* value);
-
-    void sendBuf(); // Sends the contents of the data buffer
+private:
+    void reset();
 
     // Reset crc calculation
     void crcReset();
@@ -92,14 +99,10 @@ public:
     // Returns current crc
     uint16_t crcValue();
 
-    // Updates crc with new byte
-    uint16_t crcUpdate(uint8_t data);
-
-    // Updates crc with multiple bytes
-    uint16_t crcUpdate(uint8_t* data, uint8_t length);
-
-    // Updates crc with string literal
-    uint16_t crcUpdate(const char* data);
+    // Write the new byte over serial, and update the CRC
+    void writeAndUpdateCRC(uint8_t data);
+    void writeAndUpdateCRC(uint8_t* data, uint8_t length);
+    void writeAndUpdateCRC(const char* data);
 
     // Writes crc node and resets crc value
     void writeCRC();
@@ -110,27 +113,18 @@ public:
     // Sends Inst Node
     void instNode();
 
-    //Send IMR
-    void IMR();
+    // <tag>
+    void tagOpen(const char* tag);
+    // </tag>
+    void tagClose(const char* tag);
 
-    //Send IM Ack
-    void IMAck(uint8_t ackval);
-
-    // Instrument has reached safety mode
-    void S();
-
-    // Rachuets deploy request will return without sending
-    // for the wrong device
-    void RA();
-
-    // Telemetry packet
-    void TM(uint8_t* bin, uint16_t len); // Not functional
-    void TM();
-
-    void TM_String(StateFlag_t state_flag, const char * message);
-
-    // Housekeeping Telemetry packet
-    void TMhouse();
+    // \t<field>value</field>
+    void writeNode(const char* tag, const char* value); //string
+    void writeNode(const char* tag, String value);
+    void writeNode(const char* tag, char* value, uint8_t length); //char array
+    void writeNode(const char* tag, uint8_t value);
+    void writeNode(String tag, String value);
+    void writeNode(String tag, const char* value);
 
     // Creates and wraps binary section
     // Called from TM
@@ -139,50 +133,35 @@ public:
     // sends an empty binary section
     void sendEmptyBin();
 
-    // Telecommand ackval
-    void TCAck(uint8_t ackval);
-
-    // Interacting with telemetry buffer
-    uint8_t addTm(uint8_t inChar);
-    uint8_t addTm(uint16_t inWord);
-    uint8_t addTm(uint32_t inDouble);
-    uint8_t addTm(String inStr);
-    uint8_t addTmTemp(float tempFloat);
-    uint8_t addTmGPS(float gpsFloat);
-    uint8_t addTmVolt(uint16_t voltInt);
-    uint8_t remTm();
-    void clearTm();
-    uint16_t getTmLen();
-
-private:
-    //builds TM message body
+    // builds TM message body
     void sendTMBody();
 
-    // outputstream
+    // output streams
     Print* _stream;
-
     Print* _log;
 
-    uint16_t rx_crc;
+    // working crc to transmit for both XML and binary sections
+    uint16_t tx_crc;
 
     // Instrument id
     Instrument_t instrument;
 
+    // Telemetry state fields
     String StateFlag1 = "StateFlag1";
     String StateFlag2 = "StateFlag2";
     String StateFlag3 = "StateFlag3";
-
     StateFlag_t flag1 = FINE;
     StateFlag_t flag2 = NOMESS; //Only the first one is mandatory
     StateFlag_t flag3 = NOMESS;
-
     String details1 = "";
     String details2 = "";
     String details3 = "";
 
-    CircularBuffer<uint8_t, TXBUFSIZE> tmbuf; // Buffer for outgoing telemetry data
+    SafeBuffer tm_buffer;
+    uint8_t tm_buffer_array[TMBUF_MAXSIZE]; // don't use, accessed through tm_buffer
 
-    uint16_t tmbuf_len = 0;
+    uint16_t messCount = 1;
+
 };
 
 #endif
