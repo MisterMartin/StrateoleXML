@@ -17,6 +17,7 @@
 #define XMLREADER_H
 
 #include "Telecommand.h"
+#include "InstInfo.h"
 #include "Arduino.h"
 #include <TimeLib.h>
 #include <stdint.h>
@@ -29,13 +30,6 @@
 #define MSG_TMAck   "TMAck"
 #define MSG_TC      "TC"
 #define MSG_GPS     "GPS"
-
-// used to index id string array
-enum Instrument_t {
-    FLOATS = 0,
-    RACHUTS = 1,
-    LPC = 2
-};
 
 enum ZephyrMessage_t {
     // Main HW
@@ -142,8 +136,7 @@ private:
     // serial port for Strateole on-board computer
     Stream * rx_stream;
 
-    // Zephyr-specified instrument id string
-    char inst_ids[3][8] = {"FLOATS", "RACHUTS", "LPC"};
+    // Instrument id
     Instrument_t instrument;
 
     // CRC-CCITT16 internals

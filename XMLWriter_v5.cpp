@@ -5,7 +5,7 @@
  *  Author: Marika Schubert
  *  January 2017
  *
- *  Adapted: Alex St. Clair (v4)
+ *  Adapted: Alex St. Clair (v4, v5)
  *  August 2019
  *
  *  This library will allow devices on the Strateole project
@@ -16,7 +16,7 @@
  *
  *  * Version 3 adds DIB/MCB Communications
  *  * Version 4 updates the interface for StratoCore
- *  * Version 5 removes DIB/MCB Communications
+ *  * Version 5 removes DIB/MCB Communications and adds a bigger, safe buffer
  *
  *  This code has the following dependencies:
  *
@@ -42,14 +42,15 @@ char Zproto[] = "1.0";
 uint16_t messCount = 1;
 
 #ifdef LOG
-XMLWriter::XMLWriter(Print* stream, Print* log)
+XMLWriter::XMLWriter(Print* stream, Print* log, Instrument_t inst)
 {
     _log = log;
     _log->println("Written messages with be logged.");
 #else
-XMLWriter::XMLWriter(Print* stream)
+XMLWriter::XMLWriter(Print* stream, Instrument_t inst)
 {
 #endif
+    instrument = inst;
     _stream = stream;
     reset();
 }
@@ -283,7 +284,7 @@ uint16_t XMLWriter::msgNode()
 
 void XMLWriter::instNode()
 {
-    String temp = devId;
+    String temp = inst_ids[instrument];
     temp.trim();
     writeNode("Inst", temp.c_str());
 }
@@ -329,12 +330,12 @@ void XMLWriter::S()
 
 void XMLWriter::RA()
 {
-    String temp(devId);
+    String temp(inst_ids[instrument]);
     temp.trim();
     if (temp != "RACHUTS") { //Writer does not have inst enum
 #ifdef LOG
         _log->print("Invalid devId: ");
-        _log->println(devId);
+        _log->println(inst_ids[instrument]);
 #endif
         return;
     }
@@ -562,11 +563,6 @@ void XMLWriter::TCAck(uint8_t ackval)
     tagClose("TCAck");
     sendBuf();
     writeCRC();
-}
-
-void XMLWriter::setDevId(String id)
-{
-    devId = id;
 }
 
 void XMLWriter::sendTMBody()

@@ -16,7 +16,7 @@
  *
  *  * Version 3 adds DIB/MCB Communications
  *  * Version 4 updates the interface for StratoCore
- *  * Version 5 removes DIB/MCB Communications
+ *  * Version 5 removes DIB/MCB Communications and adds a bigger, safe buffer
  *
  *  This code has the following dependencies:
  *
@@ -29,6 +29,7 @@
 #ifndef XMLWRITER_H
 #define XMLWRITER_H
 
+#include "InstInfo.h"
 #include "Arduino.h"
 #include "Time.h"
 #include <BitPacking.h>
@@ -49,9 +50,9 @@ enum StateFlag_t {
 class XMLWriter {
 public:
 #ifdef LOG
-    XMLWriter(Print* stream, Print* log);
+    XMLWriter(Print* stream, Print* log, Instrument_t inst);
 #else
-    XMLWriter(Print* stream);
+    XMLWriter(Print* stream, Instrument_t inst);
 #endif
 
     void reset();
@@ -141,9 +142,6 @@ public:
     // Telecommand ackval
     void TCAck(uint8_t ackval);
 
-    // Sets the local device name
-    void setDevId(String id);
-
     // Interacting with telemetry buffer
     uint8_t addTm(uint8_t inChar);
     uint8_t addTm(uint16_t inWord);
@@ -167,7 +165,8 @@ private:
 
     uint16_t rx_crc;
 
-    String devId;
+    // Instrument id
+    Instrument_t instrument;
 
     String StateFlag1 = "StateFlag1";
     String StateFlag2 = "StateFlag2";

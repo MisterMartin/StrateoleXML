@@ -15,6 +15,8 @@
 
 #include "XMLReader_v5.h"
 
+char inst_ids[3][8] = {"FLOATS", "RACHUTS", "LPC"};
+
 XMLReader::XMLReader(Stream * rxstream, Instrument_t inst)
 {
     rx_stream = rxstream;
