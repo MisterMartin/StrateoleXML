@@ -68,6 +68,12 @@ struct GPSData_t {
     uint8_t quality;
 };
 
+// global structs for received parameters
+extern DIB_Param_t dibParam;
+extern PIB_Param_t pibParam;
+extern LPC_Param_t lpcParam;
+extern MCB_Param_t mcbParam;
+
 class XMLReader {
 public:
     // constructors/destructors
@@ -92,10 +98,6 @@ public:
     char tc_buffer[MAX_TC_SIZE + 1] = {0};
     uint16_t tc_length = 0;
     uint8_t num_tcs = 0;
-    DIB_Param_t dibParam = {0};
-    PIB_Param_t pibParam = {0};
-    LPC_Param_t lpcParam = {0};
-    MCB_Param_t mcbParam = {0};
 
 private:
     // parsing functions

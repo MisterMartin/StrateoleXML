@@ -281,9 +281,7 @@ uint16_t XMLWriter::msgNode()
 
 void XMLWriter::instNode()
 {
-    String temp = inst_ids[instrument];
-    temp.trim();
-    writeNode("Inst", temp.c_str());
+    writeNode("Inst", inst_ids[instrument]);
 }
 
 // --------------------------------------------------------
@@ -313,9 +311,7 @@ void XMLWriter::S()
 
 void XMLWriter::RA()
 {
-    String temp(inst_ids[instrument]);
-    temp.trim();
-    if (temp != "RACHUTS") { //Writer does not have inst enum
+    if (RACHUTS != instrument) { //Writer does not have inst enum
 #ifdef LOG
         _log->print("Invalid devId: ");
         _log->println(inst_ids[instrument]);

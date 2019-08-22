@@ -17,6 +17,12 @@
 
 char inst_ids[3][8] = {"FLOATS", "RACHUTS", "LPC"};
 
+// global structs for received parameters
+DIB_Param_t dibParam = {0};
+PIB_Param_t pibParam = {0};
+LPC_Param_t lpcParam = {0};
+MCB_Param_t mcbParam = {0};
+
 XMLReader::XMLReader(Stream * rxstream, Instrument_t inst)
 {
     rx_stream = rxstream;
