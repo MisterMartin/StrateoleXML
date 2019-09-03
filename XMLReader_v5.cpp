@@ -207,10 +207,11 @@ bool XMLReader::ParseMessage()
     return true;
 }
 
+// Parse the GPS message, ensure that the GPS struct only ever contains valid data
 bool XMLReader::ParseGPSMessage()
 {
-    float ftemp;
-    unsigned int utemp0, utemp1, utemp2;
+    float longtemp, lattemp, alttemp, szatemp;
+    unsigned int yeartemp, monthtemp, daytemp, hourtemp, minutetemp, secondtemp, qualitytemp;
 
     // verify the fields
     if (0 != strcmp(fields[1], "Date")) return false;
@@ -222,43 +223,47 @@ bool XMLReader::ParseGPSMessage()
     if (0 != strcmp(fields[7], "Quality")) return false;
 
     // parse the date (YYYY/MM/DD)
-    if (3 != sscanf(field_values[1], "%u/%u/%u", &utemp0, &utemp1, &utemp2)) return false;
-    if (utemp0 > 2050) return false;
-    if (utemp1 > 12) return false;
-    if (utemp2 > 31) return false;
-    zephyr_gps.year = (uint16_t) utemp0;
-    zephyr_gps.month = (uint8_t) utemp1;
-    zephyr_gps.day = (uint8_t) utemp2;
+    if (3 != sscanf(field_values[1], "%u/%u/%u", &yeartemp, &monthtemp, &daytemp)) return false;
+    if (yeartemp > 2050) return false;
+    if (monthtemp > 12) return false;
+    if (daytemp > 31) return false;
 
     // parse the time (HH:MM:SS)
-    if (3 != sscanf(field_values[2], "%u:%u:%u", &utemp0, &utemp1, &utemp2)) return false;
-    if (utemp0 > 23) return false;
-    if (utemp1 > 59) return false;
-    if (utemp2 > 59) return false; // don't handle leap seconds
-    zephyr_gps.hour = (uint8_t) utemp0;
-    zephyr_gps.minute = (uint8_t) utemp1;
-    zephyr_gps.second = (uint8_t) utemp2;
+    if (3 != sscanf(field_values[2], "%u:%u:%u", &hourtemp, &minutetemp, &secondtemp)) return false;
+    if (hourtemp > 23) return false;
+    if (minutetemp > 59) return false;
+    if (secondtemp > 59) return false; // don't handle leap seconds
 
     // parse the longitude
-    if (1 != sscanf(field_values[3], "%f", &ftemp)) return false;
-    zephyr_gps.longitude = ftemp;
+    if (1 != sscanf(field_values[3], "%f", &longtemp)) return false;
 
     // parse the latitude
-    if (1 != sscanf(field_values[4], "%f", &ftemp)) return false;
-    zephyr_gps.latitude = ftemp;
+    if (1 != sscanf(field_values[4], "%f", &lattemp)) return false;
 
     // parse the altitude
-    if (1 != sscanf(field_values[5], "%f", &ftemp)) return false;
-    zephyr_gps.altitude = ftemp;
+    if (1 != sscanf(field_values[5], "%f", &alttemp)) return false;
 
     // parse the solar zenith angle
-    if (1 != sscanf(field_values[6], "%f", &ftemp)) return false;
-    zephyr_gps.solar_zenith_angle = ftemp;
+    if (1 != sscanf(field_values[6], "%f", &szatemp)) return false;
 
     // parse the GPS fix quality
-    if (1 != sscanf(field_values[7], "%u", &utemp0)) return false;
-    if (utemp0 < 2 || utemp0 > 3) return false; // only accept good time fixes
-    zephyr_gps.quality = utemp0;
+    if (1 != sscanf(field_values[7], "%u", &qualitytemp)) return false;
+    if (0 == qualitytemp) return false; // ignore these messages
+
+    // only assign values once the message has been parsed successfully
+    zephyr_gps.year = (uint16_t) yeartemp;
+    zephyr_gps.month = (uint8_t) monthtemp;
+    zephyr_gps.day = (uint8_t) daytemp;
+    zephyr_gps.hour = (uint8_t) hourtemp;
+    zephyr_gps.minute = (uint8_t) minutetemp;
+    zephyr_gps.second = (uint8_t) secondtemp;
+    zephyr_gps.quality = qualitytemp;
+    if (qualitytemp > 1) {
+        zephyr_gps.longitude = longtemp;
+        zephyr_gps.latitude = lattemp;
+        zephyr_gps.altitude = alttemp;
+        zephyr_gps.solar_zenith_angle = szatemp;
+    }
 
     return true;
 }

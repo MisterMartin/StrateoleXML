@@ -60,11 +60,6 @@ enum Telecommand_t : uint8_t {
     SETFIBPOS = 93,
     SETAVTIME = 94,
 
-    // RACHUTS Settings
-    SETAUTO = 95,
-    SETMANUAL = 96,
-    SETDWELLTIME = 97,
-
     // LPC Settings
     SETMODE = 100, // Expects mode enum
     SETSAMPLE = 101, // Number of samples per cycle
@@ -78,8 +73,23 @@ enum Telecommand_t : uint8_t {
     SETFLUSH = 109, // Time in seconds for air flush
     SETSAMPLEAVG = 110, // Values to average from PHA
 
+    // RACHUTS Commands and Settings
+    SETAUTO = 130,
+    SETMANUAL = 131,
+    SETSZAMIN = 132,
+    SETPROFILESIZE = 133,
+    SETDOCKAMOUNT = 134,
+    SETDWELLTIME = 135,
+    SETPROFILEPERIOD = 136,
+    SETNUMPROFILES = 137,
+    USESZATRIGGER = 138,
+    USETIMETRIGGER = 139,
+    SETTIMETRIGGER = 140,
+    SETDOCKOVERSHOOT = 141,
+
     // Generic instrument commands
     RESET_INST = 200,
+    EXITERROR = 201,
 };
 
 struct DIB_Param_t {
@@ -93,7 +103,14 @@ struct DIB_Param_t {
 };
 
 struct PIB_Param_t {
-    uint8_t dwellTime;
+    float szaMinimum;
+    float profileSize;
+    float dockAmount;
+    float dockOvershoot;
+    uint32_t timeTrigger;
+    uint16_t dwellTime;
+    uint16_t profilePeriod;
+    uint8_t numProfiles;
 };
 
 struct LPC_Param_t {
