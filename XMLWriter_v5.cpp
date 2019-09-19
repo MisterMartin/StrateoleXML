@@ -360,10 +360,10 @@ void XMLWriter::TCAck(bool ackval)
 
 void XMLWriter::TM()
 {
-    if (0 == tm_buffer.NumElements()) {
-        TMhouse();
-        return;
-    }
+    // if (0 == tm_buffer.NumElements()) {
+    //     TMhouse();
+    //     return;
+    // }
     tagOpen("TM");
     msgNode();
     instNode();
@@ -376,9 +376,9 @@ void XMLWriter::TM()
     _log->println(tm_buffer.NumElements());
 #endif
     writeCRC();
-    if (0 != tm_buffer.NumElements()) {
-        sendBin();
-    }
+    // if (0 != tm_buffer.NumElements()) {
+    sendBin();
+    // }
 }
 
 void XMLWriter::TM_String(StateFlag_t state_flag, const char * message)
