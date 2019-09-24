@@ -41,6 +41,7 @@ enum Telecommand_t : uint8_t {
     DOCKa = 9,
     FULLRETRACT = 10,
     CANCELMOTION = 11,
+    ZEROREEL = 12,
 
     // DIB Parameters
     MINDIBTEMP = 60,
