@@ -40,13 +40,11 @@ char Zproto[] = "1.0";
 
 #ifdef LOG
 XMLWriter::XMLWriter(Print* stream, Print* log, Instrument_t inst)
-    : tm_buffer(tm_buffer_array, TMBUF_MAXSIZE)
 {
     _log = log;
     _log->println("Written messages with be logged.");
 #else
 XMLWriter::XMLWriter(Print* stream, Instrument_t inst)
-    : tm_buffer(tm_buffer_array, TMBUF_MAXSIZE)
 {
 #endif
     instrument = inst;
@@ -57,7 +55,7 @@ XMLWriter::XMLWriter(Print* stream, Instrument_t inst)
 void XMLWriter::reset()
 {
     tx_crc = reset_crc;
-    tm_buffer.Clear();
+    clearTm();
 }
 
 // --------------------------------------------------------
@@ -360,25 +358,19 @@ void XMLWriter::TCAck(bool ackval)
 
 void XMLWriter::TM()
 {
-    // if (0 == tm_buffer.NumElements()) {
-    //     TMhouse();
-    //     return;
-    // }
     tagOpen("TM");
     msgNode();
     instNode();
     sendTMBody();
-    String buf = String(tm_buffer.NumElements());
+    String buf = String(num_tm_elements);
     writeNode("Length", buf.c_str());
     tagClose("TM");
 #ifdef LOG
     _log->print("Number of items in telemetry buffer: ");
-    _log->println(tm_buffer.NumElements());
+    _log->println(num_tm_elements);
 #endif
     writeCRC();
-    // if (0 != tm_buffer.NumElements()) {
     sendBin();
-    // }
 }
 
 void XMLWriter::TM_String(StateFlag_t state_flag, const char * message)
@@ -439,9 +431,8 @@ void XMLWriter::sendBin()
     _log->print("START");
 #endif
 
-    uint8_t inchar;
-    while (tm_buffer.Pop(&inchar)) {
-        writeAndUpdateCRC(inchar);
+    for (uint16_t i = 0; i < num_tm_elements; i++) {
+        writeAndUpdateCRC(tm_buffer[i]);
     }
 
     uint16_t binCrc = tx_crc;
@@ -460,7 +451,7 @@ void XMLWriter::sendBin()
     _log->println("END");
 #endif
 
-    reset();
+    tm_buff_sent = true;
 
     return;
 }
@@ -564,7 +555,7 @@ void XMLWriter::sendTMBody()
 
 bool XMLWriter::addTm(uint8_t inChar)
 {
-    return tm_buffer.Push(inChar);
+    return addTMByte(inChar);
 }
 
 bool XMLWriter::addTm(uint16_t inWord)
@@ -572,10 +563,10 @@ bool XMLWriter::addTm(uint16_t inWord)
     uint8_t outChar;
 
     outChar = inWord >> 8;
-    if (!tm_buffer.Push(outChar)) return false;
+    if (!addTMByte(outChar)) return false;
 
     outChar = (inWord & 0xFF);
-    return tm_buffer.Push(outChar);
+    return addTMByte(outChar);
 
 }
 
@@ -584,16 +575,16 @@ bool XMLWriter::addTm(uint32_t inDouble)
     uint8_t outChar;
 
     outChar = inDouble >> 24;
-    if (!tm_buffer.Push(outChar)) return false;
+    if (!addTMByte(outChar)) return false;
 
     outChar = ((inDouble >> 16) & 0x000000FF);
-    if (!tm_buffer.Push(outChar)) return false;
+    if (!addTMByte(outChar)) return false;
 
     outChar = ((inDouble >> 8) & 0x000000FF);
-    if (!tm_buffer.Push(outChar)) return false;
+    if (!addTMByte(outChar)) return false;
 
     outChar = ((inDouble) & 0x000000FF);
-    return tm_buffer.Push(outChar);
+    return addTMByte(outChar);
 }
 
 bool XMLWriter::addTm(String inStr)
@@ -615,7 +606,7 @@ bool XMLWriter::addTm(const uint8_t * buffer, uint16_t size)
     if (NULL == buffer) return false;
 
     for (uint16_t i = 0; i < size; i++) {
-        if (!tm_buffer.Push(buffer[i])) return false;
+        if (!addTMByte(buffer[i])) return false;
     }
 
     return true;
@@ -645,12 +636,33 @@ bool XMLWriter::addTmVolt(uint16_t voltInt)
 
 void XMLWriter::clearTm()
 {
-    tm_buffer.Clear();
+    num_tm_elements = 0;
+    tm_buff_sent = false;
 }
 
 uint16_t XMLWriter::getTmLen()
 {
-    return tm_buffer.NumElements();
+    return num_tm_elements;
+}
+
+uint16_t XMLWriter::getTmBuffer(uint8_t ** buffer)
+{
+    *buffer = tm_buffer;
+    return num_tm_elements;
+}
+
+inline bool XMLWriter::addTMByte(uint8_t in_byte)
+{
+    // if we're adding to the buffer after it's been sent, reset it
+    if (tm_buff_sent) {
+        tm_buff_sent = false;
+        num_tm_elements = 0;
+    }
+
+    if (TMBUF_MAXSIZE == num_tm_elements) return false;
+
+    tm_buffer[num_tm_elements++] = in_byte;
+    return true;
 }
 
 // END OF FILE

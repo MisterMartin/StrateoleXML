@@ -89,6 +89,7 @@ public:
     bool addTmVolt(uint16_t voltInt);
     void clearTm();
     uint16_t getTmLen();
+    uint16_t getTmBuffer(uint8_t ** buffer);
 
 private:
     void reset();
@@ -136,6 +137,9 @@ private:
     // builds TM message body
     void sendTMBody();
 
+    // internal interaction with the tm buffer
+    bool addTMByte(uint8_t in_byte);
+
     // output streams
     Print* _stream;
     Print* _log;
@@ -157,8 +161,10 @@ private:
     String details2 = "";
     String details3 = "";
 
-    SafeBuffer tm_buffer;
-    uint8_t tm_buffer_array[TMBUF_MAXSIZE]; // don't use, accessed through tm_buffer
+    // Telemetry buffer
+    uint8_t tm_buffer[TMBUF_MAXSIZE];
+    uint16_t num_tm_elements = 0;
+    bool tm_buff_sent = false;
 
     uint16_t messCount = 1;
 
