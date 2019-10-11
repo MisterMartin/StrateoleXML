@@ -43,23 +43,11 @@ enum Telecommand_t : uint8_t {
     CANCELMOTION = 11,
     ZEROREEL = 12,
 
-    // DIB Parameters
-    MINDIBTEMP = 60,
-    MAXDIBTEMP = 61,
-    MINBATVOLT = 62,
-    FIBERSWITCH = 63,
-    EFUPERIOD = 64,
-    EFUTIME = 65,
-    FTRPOWER = 66,
-    ETHERNETRESET = 67,
-    FTRONTIME = 68,
-    FTRCYCLETIME = 69,
-
-    // FTR3000 Settings
-    GETSTATUS = 90,
-    READTEMP = 91,
-    SETFIBPOS = 93,
-    SETAVTIME = 94,
+    // DIB Commands and Settings
+    GOFTRFLIGHT = 50, // go to the flight FTR sub-mode
+    GOMCBFLIGHT = 51, // go to the flight MCB sub-mode
+    FTRCYCLETIME = 52,
+    FTRONTIME = 53,
 
     // LPC Settings
     SETMODE = 100, // Expects mode enum
