@@ -128,6 +128,10 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
     case SETDOCKOVERSHOOT:
         if (!Get_float(&(pibParam.dockOvershoot),1)) return false;
         break;
+    case RETRYDOCK:
+        if (!Get_float(&(mcbParam.deployLen),1)) return false;
+        if (!Get_float(&(mcbParam.retractLen),1)) return false;
+        break;
     // Messages without parameters ------------------------
     default:
         break;

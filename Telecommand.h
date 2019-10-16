@@ -75,6 +75,8 @@ enum Telecommand_t : uint8_t {
     USETIMETRIGGER = 139,
     SETTIMETRIGGER = 140,
     SETDOCKOVERSHOOT = 141,
+    RETRYDOCK = 142,
+    GETPUSTATUS = 143,
 
     // Generic instrument commands
     RESET_INST = 200,
