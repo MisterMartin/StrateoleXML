@@ -77,6 +77,8 @@ enum Telecommand_t : uint8_t {
     SETDOCKOVERSHOOT = 141,
     RETRYDOCK = 142,
     GETPUSTATUS = 143,
+    PUPOWERON = 144,
+    PUPOWEROFF = 145,
 
     // Generic instrument commands
     RESET_INST = 200,
