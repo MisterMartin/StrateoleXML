@@ -21,7 +21,6 @@
  *
  *  This code has the following dependencies:
  *
- *  "SafeBuffer.h"
  *	"Arduino.h"
  */
 
@@ -245,7 +244,7 @@ void XMLWriter::writeAndUpdateCRC(const char* data)
     return;
 }
 
-void XMLWriter::writeAndUpdateCRC(uint8_t data)
+inline void XMLWriter::writeAndUpdateCRC(uint8_t data)
 {
     uint8_t msb = tx_crc >> 8;
     uint8_t lsb = tx_crc & 255;

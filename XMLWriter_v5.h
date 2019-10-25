@@ -21,7 +21,6 @@
  *
  *  This code has the following dependencies:
  *
- *  "SafeBuffer.h"
  *	"Arduino.h"
  *  "Time.h"
  *  <BitPacking.h>
@@ -31,7 +30,6 @@
 #define XMLWRITER_H
 
 #include "InstInfo.h"
-#include "SafeBuffer.h"
 #include "Arduino.h"
 #include "Time.h"
 #include <BitPacking.h>

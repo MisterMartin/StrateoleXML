@@ -30,7 +30,7 @@ XMLReader::XMLReader(Stream * rxstream, Instrument_t inst)
 }
 
 // get the next character from the stream and update the CRC
-bool XMLReader::ReadNextChar(char * new_char)
+inline bool XMLReader::ReadNextChar(char * new_char)
 {
     uint16_t c;
     uint8_t ret_char, msb, lsb;
