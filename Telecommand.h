@@ -79,6 +79,8 @@ enum Telecommand_t : uint8_t {
     GETPUSTATUS = 143,
     PUPOWERON = 144,
     PUPOWEROFF = 145,
+    MANUALPROFILE = 146,
+    OFFLOADPUPROFILE = 147,
 
     // Generic instrument commands
     RESET_INST = 200,

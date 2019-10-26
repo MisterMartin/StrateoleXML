@@ -132,6 +132,12 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
         if (!Get_float(&(mcbParam.deployLen),1)) return false;
         if (!Get_float(&(mcbParam.retractLen),1)) return false;
         break;
+    case MANUALPROFILE:
+        if (!Get_float(&(pibParam.profileSize),1)) return false;
+        if (!Get_float(&(pibParam.dockAmount),1)) return false;
+        if (!Get_float(&(pibParam.dockOvershoot),1)) return false;
+        if (!Get_uint16(&(pibParam.dwellTime),1)) return false;
+        break;
     // Messages without parameters ------------------------
     default:
         break;
