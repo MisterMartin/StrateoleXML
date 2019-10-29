@@ -611,6 +611,23 @@ bool XMLWriter::addTm(const uint8_t * buffer, uint16_t size)
     return true;
 }
 
+bool XMLWriter::addTm(const uint16_t * buffer, uint16_t size)
+{
+    uint8_t outChar;
+
+    if (NULL == buffer) return false;
+
+    for (uint16_t i = 0; i < size; i++) {
+        outChar = buffer[i] >> 8;
+        if (!addTMByte(outChar)) return false;
+
+        outChar = (buffer[i] & 0xFF);
+        if (!addTMByte(outChar)) return false;
+    }
+
+    return true;
+}
+
 bool XMLWriter::addTmTemp(float tempFloat)
 {
     uint16_t tempInt = tempFloat2Bin(tempFloat);

@@ -82,6 +82,7 @@ public:
     bool addTm(uint32_t inDouble);
     bool addTm(String inStr);
     bool addTm(const uint8_t * buffer, uint16_t size);
+    bool addTm(const uint16_t * buffer, uint16_t size);
     bool addTmTemp(float tempFloat);
     bool addTmGPS(float gpsFloat);
     bool addTmVolt(uint16_t voltInt);
