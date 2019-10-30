@@ -86,6 +86,12 @@ enum Telecommand_t : uint8_t {
     OFFLOADPUPROFILE = 147,
     SETPREPROFILETIME = 148,
     SETPUWARMUPTIME = 149,
+    AUTOREDOCKPARAMS = 150,
+    SETMOTIONTIMEOUT = 151,
+
+    // PU commands and settings
+    PUWARMUPCONFIGS = 180,
+    PUPROFILECONFIGS = 181,
 
     // Generic instrument commands
     RESET_INST = 200,
@@ -104,12 +110,16 @@ struct PIB_Param_t {
     float profileSize;
     float dockAmount;
     float dockOvershoot;
+    float autoRedockOut;
+    float autoRedockIn;
     uint32_t timeTrigger;
     uint16_t dwellTime;
     uint16_t profilePeriod;
     uint16_t preprofileTime;
     uint16_t warmupTime;
     uint8_t numProfiles;
+    uint8_t numRedock;
+    uint8_t motionTimeout;
 };
 
 struct LPC_Param_t {
@@ -137,6 +147,22 @@ struct MCB_Param_t {
     float dockLen;
     float dockVel;
     float dockAcc;
+};
+
+struct PU_Param_t {
+    // warmup parameters
+    float flashT;
+    float heater1T;
+    float heater2T;
+    uint8_t flashPower;
+    uint8_t tsenPower;
+
+    // profile settings
+    uint32_t profileRate;
+    uint32_t dwellRate;
+    uint8_t profileTSEN;
+    uint8_t profileROPC;
+    uint8_t profileFLASH;
 };
 
 #endif /* TELECOMMAND_H */

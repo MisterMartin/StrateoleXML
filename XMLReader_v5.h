@@ -73,6 +73,7 @@ extern DIB_Param_t dibParam;
 extern PIB_Param_t pibParam;
 extern LPC_Param_t lpcParam;
 extern MCB_Param_t mcbParam;
+extern PU_Param_t puParam;
 
 class XMLReader {
 public:
