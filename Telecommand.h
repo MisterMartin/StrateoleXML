@@ -48,6 +48,9 @@ enum Telecommand_t : uint8_t {
     GOMCBFLIGHT = 51, // go to the flight MCB sub-mode
     FTRCYCLETIME = 52,
     FTRONTIME = 53,
+    SETDIBHKPERIOD = 54,
+    FTRSTATUSLIMIT = 55,
+
 
     // LPC Settings
     SETMODE = 100, // Expects mode enum
@@ -81,6 +84,8 @@ enum Telecommand_t : uint8_t {
     PUPOWEROFF = 145,
     MANUALPROFILE = 146,
     OFFLOADPUPROFILE = 147,
+    SETPREPROFILETIME = 148,
+    SETPUWARMUPTIME = 149,
 
     // Generic instrument commands
     RESET_INST = 200,
@@ -88,13 +93,10 @@ enum Telecommand_t : uint8_t {
 };
 
 struct DIB_Param_t {
-    float minBatVolt;
-    uint8_t fibSwitchState;
-    uint16_t efuPeriod;
-    uint8_t efuStart;
-    uint8_t ftrPower;
     uint16_t ftrOnTime;
     uint16_t ftrCycleTime;
+    uint16_t hkPeriod;
+    uint16_t statusLimit;
 };
 
 struct PIB_Param_t {
@@ -105,6 +107,8 @@ struct PIB_Param_t {
     uint32_t timeTrigger;
     uint16_t dwellTime;
     uint16_t profilePeriod;
+    uint16_t preprofileTime;
+    uint16_t warmupTime;
     uint8_t numProfiles;
 };
 

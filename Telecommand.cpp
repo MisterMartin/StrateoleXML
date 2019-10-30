@@ -103,6 +103,12 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
     case FTRCYCLETIME:
         if (!Get_uint16(&(dibParam.ftrCycleTime),1)) return false;
         break;
+    case SETDIBHKPERIOD:
+        if (!Get_uint16(&(dibParam.hkPeriod),1)) return false;
+        break;
+    case FTRSTATUSLIMIT:
+        if (!Get_uint16(&(dibParam.statusLimit),1)) return false;
+        break;
     // PIB Parameters -------------------------------------
     case SETSZAMIN:
         if (!Get_float(&(pibParam.szaMinimum),1)) return false;
@@ -137,6 +143,12 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
         if (!Get_float(&(pibParam.dockAmount),1)) return false;
         if (!Get_float(&(pibParam.dockOvershoot),1)) return false;
         if (!Get_uint16(&(pibParam.dwellTime),1)) return false;
+        break;
+    case SETPREPROFILETIME:
+        if (!Get_uint16(&(pibParam.preprofileTime),1)) return false;
+        break;
+    case SETPUWARMUPTIME:
+        if (!Get_uint16(&(pibParam.warmupTime),1)) return false;
         break;
     // Messages without parameters ------------------------
     default:
