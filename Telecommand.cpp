@@ -118,6 +118,9 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
     case FTRSTATUSLIMIT:
         if (!Get_uint16(&(dibParam.statusLimit),1)) return false;
         break;
+    case RAMANLEN:
+        if (!Get_uint16(&(dibParam.ramanScanLength),1)) return false;
+        break;
     // PIB Parameters -------------------------------------
     case SETSZAMIN:
         if (!Get_float(&(pibParam.szaMinimum),1)) return false;

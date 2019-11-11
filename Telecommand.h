@@ -53,6 +53,7 @@ enum Telecommand_t : uint8_t {
     FTRONTIME = 53,
     SETDIBHKPERIOD = 54,
     FTRSTATUSLIMIT = 55,
+    RAMANLEN = 56,
 
 
     // LPC Settings
@@ -107,6 +108,7 @@ struct DIB_Param_t {
     uint16_t ftrCycleTime;
     uint16_t hkPeriod;
     uint16_t statusLimit;
+    uint16_t ramanScanLength;
 };
 
 struct PIB_Param_t {
