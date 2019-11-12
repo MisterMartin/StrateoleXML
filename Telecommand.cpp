@@ -71,15 +71,6 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
     case DOCKa:
         if (!Get_float(&(mcbParam.dockAcc),1)) return false;
         break;
-    case TEMPLIMITS:
-        if (!Get_float(mcbParam.tempLimits,6)) return false;
-        break;
-    case TORQUELIMITS:
-        if (!Get_float(mcbParam.torqueLimits,2)) return false;
-        break;
-    case CURRLIMITS:
-        if (!Get_float(mcbParam.currLimits,2)) return false;
-        break;
     // LPC Parameters -------------------------------------
     case SETSAMPLE:
         if (!Get_uint16(&(lpcParam.samples),1)) return false;
@@ -120,6 +111,10 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
         break;
     case RAMANLEN:
         if (!Get_uint16(&(dibParam.ramanScanLength),1)) return false;
+        break;
+    case SETMEASURETYPE:
+        if (!Get_uint8(&(dibParam.ftrMeasureType),1)) return false;
+        if (!Get_uint8(&(dibParam.ftrBurstLim),1)) return false;
         break;
     // PIB Parameters -------------------------------------
     case SETSZAMIN:
