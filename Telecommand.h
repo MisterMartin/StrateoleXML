@@ -42,6 +42,9 @@ enum Telecommand_t : uint8_t {
     FULLRETRACT = 10,
     CANCELMOTION = 11,
     ZEROREEL = 12,
+    TEMPLIMITS = 13,
+    TORQUELIMITS = 14,
+    CURRLIMITS = 15,
 
     // DIB Commands and Settings
     GOFTRFLIGHT = 50, // go to the flight FTR sub-mode
@@ -93,6 +96,7 @@ enum Telecommand_t : uint8_t {
     // PU commands and settings
     PUWARMUPCONFIGS = 180,
     PUPROFILECONFIGS = 181,
+    PURESET = 182,
 
     // Generic instrument commands
     RESET_INST = 200,
@@ -151,6 +155,9 @@ struct MCB_Param_t {
     float dockLen;
     float dockVel;
     float dockAcc;
+    float tempLimits[6];
+    float torqueLimits[2];
+    float currLimits[2];
 };
 
 struct PU_Param_t {
