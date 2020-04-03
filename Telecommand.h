@@ -45,6 +45,8 @@ enum Telecommand_t : uint8_t {
     TEMPLIMITS = 13,
     TORQUELIMITS = 14,
     CURRLIMITS = 15,
+    IGNORELIMITS = 16,
+    USELIMITS = 17,
 
     // DIB Commands and Settings
     GOFTRFLIGHT = 50, // go to the flight FTR sub-mode
