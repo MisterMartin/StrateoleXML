@@ -82,9 +82,6 @@ public:
     bool addTm(String inStr);
     bool addTm(const uint8_t * buffer, uint16_t size);
     bool addTm(const uint16_t * buffer, uint16_t size);
-    bool addTmTemp(float tempFloat);
-    bool addTmGPS(float gpsFloat);
-    bool addTmVolt(uint16_t voltInt);
     void clearTm();
     uint16_t getTmLen();
     uint16_t getTmBuffer(uint8_t ** buffer);
