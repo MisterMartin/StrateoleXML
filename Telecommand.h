@@ -105,6 +105,7 @@ enum Telecommand_t : uint8_t {
     // Generic instrument commands
     RESET_INST = 200,
     EXITERROR = 201,
+    GETTMBUFFER = 202,
 };
 
 struct DIB_Param_t {
