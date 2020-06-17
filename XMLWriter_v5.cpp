@@ -628,28 +628,6 @@ bool XMLWriter::addTm(const uint16_t * buffer, uint16_t size)
     return true;
 }
 
-bool XMLWriter::addTmTemp(float tempFloat)
-{
-    uint16_t tempInt = tempFloat2Bin(tempFloat);
-    return addTm(tempInt);
-}
-
-bool XMLWriter::addTmGPS(float gpsFloat)
-{
-    uint32_t gpsInt = latLongFloat2Bin(gpsFloat);
-    uint8_t err = addTm((uint8_t)(gpsInt >> 16));
-    if (err) {
-        return 1;
-    }
-    return addTm((uint16_t)(gpsInt & 0x0000FFFF));
-}
-
-bool XMLWriter::addTmVolt(uint16_t voltInt)
-{
-    uint8_t voltBin = voltInt2Short(voltInt);
-    return addTm(voltBin);
-}
-
 void XMLWriter::clearTm()
 {
     num_tm_elements = 0;

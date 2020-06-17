@@ -45,6 +45,9 @@ enum Telecommand_t : uint8_t {
     TEMPLIMITS = 13,
     TORQUELIMITS = 14,
     CURRLIMITS = 15,
+    IGNORELIMITS = 16,
+    USELIMITS = 17,
+    GETMCBEEPROM = 18,
 
     // DIB Commands and Settings
     GOFTRFLIGHT = 50, // go to the flight FTR sub-mode
@@ -92,6 +95,7 @@ enum Telecommand_t : uint8_t {
     SETPUWARMUPTIME = 149,
     AUTOREDOCKPARAMS = 150,
     SETMOTIONTIMEOUT = 151,
+    GETPIBEEPROM = 152,
 
     // PU commands and settings
     PUWARMUPCONFIGS = 180,
@@ -101,6 +105,7 @@ enum Telecommand_t : uint8_t {
     // Generic instrument commands
     RESET_INST = 200,
     EXITERROR = 201,
+    GETTMBUFFER = 202,
 };
 
 struct DIB_Param_t {
