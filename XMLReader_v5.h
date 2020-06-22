@@ -99,6 +99,7 @@ public:
     char tc_buffer[MAX_TC_SIZE + 1] = {0};
     uint16_t tc_length = 0;
     uint8_t num_tcs = 0;
+    uint8_t curr_tc = 0;
 
 private:
     // parsing functions
@@ -154,7 +155,6 @@ private:
     uint8_t num_fields = 0;
 
     // internal telecommand tracking
-    uint8_t curr_tc = 0;
     uint16_t tc_index = 0;
 
 };

@@ -60,8 +60,6 @@ void XMLReader::ResetReader()
     working_crc = crc_poly;
     crc_result = 0;
     num_fields = 0;
-    tc_index = 0;
-    curr_tc = 0;
 
     // null-terminate all buffer first characters
     message_buff[0] = '\0';
@@ -434,6 +432,8 @@ bool XMLReader::ReadBinarySection(uint32_t timeout)
 
     // read the binary section into the telecommand buffer
     num_tcs = 0;
+    tc_index = 0;
+    curr_tc = 0;
     while (millis() < timeout && itr < tc_length) {
         if (ReadNextChar(&rx_char)) {
             tc_buffer[itr++] = rx_char;
