@@ -174,6 +174,9 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
     case SETMOTIONTIMEOUT:
         if (!Get_uint8(&(pibParam.motionTimeout),1)) return false;
         break;
+    case DOCKEDPROFILE:
+        if (!Get_uint16(&(pibParam.dockedProfileTime),1)) return false;
+        break;
     // PU parameters --------------------------------------
     case PUWARMUPCONFIGS:
         if (!Get_float(&(puParam.flashT),1)) return false;
@@ -188,6 +191,12 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
         if (!Get_uint8(&(puParam.profileFLASH),1)) return false;
         if (!Get_uint8(&(puParam.profileROPC),1)) return false;
         if (!Get_uint8(&(puParam.profileTSEN),1)) return false;
+        break;
+    case PUDOCKEDCONFIGS:
+        if (!Get_uint32(&(puParam.dockedRate),1)) return false;
+        if (!Get_uint8(&(puParam.dockedFLASH),1)) return false;
+        if (!Get_uint8(&(puParam.dockedROPC),1)) return false;
+        if (!Get_uint8(&(puParam.dockedTSEN),1)) return false;
         break;
     // Messages without parameters ------------------------
     default:
