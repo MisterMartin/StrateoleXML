@@ -97,6 +97,8 @@ enum Telecommand_t : uint8_t {
     SETMOTIONTIMEOUT = 151,
     GETPIBEEPROM = 152,
     DOCKEDPROFILE = 153,
+    STARTREALTIMEMCB = 154,
+    EXITREALTIMEMCB = 155,
 
     // PU commands and settings
     PUWARMUPCONFIGS = 180,
