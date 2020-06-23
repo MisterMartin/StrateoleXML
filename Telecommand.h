@@ -110,6 +110,7 @@ enum Telecommand_t : uint8_t {
     RESET_INST = 200,
     EXITERROR = 201,
     GETTMBUFFER = 202,
+    SENDSTATE = 203,
 };
 
 struct DIB_Param_t {
