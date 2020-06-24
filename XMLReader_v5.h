@@ -95,7 +95,7 @@ public:
     GPSData_t zephyr_gps = {0};
 
     // telecommand results
-    Telecommand_t zephyr_tc = NO_TELECOMMAND;
+    Telecommand_t zephyr_tc = NULL_TELECOMMAND;
     char tc_buffer[MAX_TC_SIZE + 1] = {0};
     uint16_t tc_length = 0;
     uint8_t num_tcs = 0;

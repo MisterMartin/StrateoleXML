@@ -18,7 +18,7 @@
 
 TCParseStatus_t XMLReader::GetTelecommand()
 {
-    zephyr_tc = NO_TELECOMMAND;
+    zephyr_tc = NULL_TELECOMMAND;
 
     // make sure there are still TCs in the buffer
     if (curr_tc++ == num_tcs) {

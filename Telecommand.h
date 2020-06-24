@@ -27,7 +27,7 @@ enum TCParseStatus_t {
 
 // Telecommand Messages
 enum Telecommand_t : uint8_t {
-    NO_TELECOMMAND = 0,
+    NULL_TELECOMMAND = 0,
 
     // MCB commands and parameters
     DEPLOYx = 1,
