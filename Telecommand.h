@@ -27,7 +27,7 @@ enum TCParseStatus_t {
 
 // Telecommand Messages
 enum Telecommand_t : uint8_t {
-    NO_TELECOMMAND = 0,
+    NULL_TELECOMMAND = 0,
 
     // MCB commands and parameters
     DEPLOYx = 1,
@@ -96,16 +96,21 @@ enum Telecommand_t : uint8_t {
     AUTOREDOCKPARAMS = 150,
     SETMOTIONTIMEOUT = 151,
     GETPIBEEPROM = 152,
+    DOCKEDPROFILE = 153,
+    STARTREALTIMEMCB = 154,
+    EXITREALTIMEMCB = 155,
 
     // PU commands and settings
     PUWARMUPCONFIGS = 180,
     PUPROFILECONFIGS = 181,
     PURESET = 182,
+    PUDOCKEDCONFIGS = 183,
 
     // Generic instrument commands
     RESET_INST = 200,
     EXITERROR = 201,
     GETTMBUFFER = 202,
+    SENDSTATE = 203,
 };
 
 struct DIB_Param_t {
@@ -130,6 +135,7 @@ struct PIB_Param_t {
     uint16_t profilePeriod;
     uint16_t preprofileTime;
     uint16_t warmupTime;
+    uint16_t dockedProfileTime;
     uint8_t numProfiles;
     uint8_t numRedock;
     uint8_t motionTimeout;
@@ -179,6 +185,12 @@ struct PU_Param_t {
     uint8_t profileTSEN;
     uint8_t profileROPC;
     uint8_t profileFLASH;
+
+    // docked profile settings
+    uint32_t dockedRate;
+    uint8_t dockedTSEN;
+    uint8_t dockedROPC;
+    uint8_t dockedFLASH;
 };
 
 #endif /* TELECOMMAND_H */
