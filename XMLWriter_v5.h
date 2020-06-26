@@ -72,9 +72,6 @@ public:
     void TM();
     void TM_String(StateFlag_t state_flag, const char * message);
 
-    // Housekeeping Telemetry packet
-    void TMhouse();
-
     // Interacting with telemetry buffer
     bool addTm(uint8_t inChar);
     bool addTm(uint16_t inWord);

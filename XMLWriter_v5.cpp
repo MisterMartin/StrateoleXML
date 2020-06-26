@@ -398,29 +398,6 @@ void XMLWriter::TM_String(StateFlag_t state_flag, const char * message)
     sendEmptyBin(); // expected, even if empty
 }
 
-void XMLWriter::TMhouse()
-{ // Sends only housekeeping data
-    // Intended for use in low power and standby
-    tagOpen("TM");
-    msgNode();
-    instNode();
-    sendTMBody();
-
-    writeNode("Length", "0");
-    tagClose("TM");
-    writeCRC();
-    _stream->print("START");
-    _log->print("START");
-    byte temp_byte = reset_crc >> 8;
-    _log->print((byte)temp_byte, HEX);
-    _stream->write((byte)temp_byte);
-    temp_byte = (reset_crc && (0x00FF));
-    _stream->write((byte)temp_byte);
-    _stream->print("END");
-    _log->print((byte)temp_byte, HEX);
-    _log->print("END");
-}
-
 void XMLWriter::sendBin()
 {
     // Calling function does proper input check
