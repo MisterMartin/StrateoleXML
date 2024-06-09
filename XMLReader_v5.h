@@ -22,6 +22,9 @@
 #include <TimeLib.h>
 #include <stdint.h>
 
+// The maximum number of fields that a message can contain.
+#define MAX_MSG_FIELDS 10
+
 // Message Types
 #define MSG_IM      "IM"
 #define MSG_SAck    "SAck"
@@ -59,6 +62,8 @@ struct GPSData_t {
     float latitude;
     float altitude;
     float solar_zenith_angle;
+    float diff;
+    float vbat;
     uint16_t year;
     uint8_t month;
     uint8_t day;
@@ -150,8 +155,8 @@ private:
 
     // internal buffers for message parts
     char message_buff[8] = {0};
-    char fields[8][8] = {{0}};
-    char field_values[8][16] = {{0}};
+    char fields[MAX_MSG_FIELDS][8] = {{0}};
+    char field_values[MAX_MSG_FIELDS][16] = {{0}};
     uint8_t num_fields = 0;
 
     // internal telecommand tracking

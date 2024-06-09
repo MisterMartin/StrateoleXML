@@ -63,7 +63,7 @@ void XMLReader::ResetReader()
 
     // null-terminate all buffer first characters
     message_buff[0] = '\0';
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < MAX_MSG_FIELDS; i++) {
         fields[i][0] = '\0';
         field_values[i][0] = '\0';
     }
@@ -209,7 +209,7 @@ bool XMLReader::ParseMessage()
 // Parse the GPS message, ensure that the GPS struct only ever contains valid data
 bool XMLReader::ParseGPSMessage()
 {
-    float longtemp, lattemp, alttemp, szatemp;
+    float longtemp, lattemp, alttemp, szatemp, vbattemp, difftemp;
     unsigned int yeartemp, monthtemp, daytemp, hourtemp, minutetemp, secondtemp, qualitytemp;
 
     // verify the fields
@@ -219,7 +219,9 @@ bool XMLReader::ParseGPSMessage()
     if (0 != strcmp(fields[4], "Lat")) return false;
     if (0 != strcmp(fields[5], "Alt")) return false;
     if (0 != strcmp(fields[6], "SZA")) return false;
-    if (0 != strcmp(fields[7], "Quality")) return false;
+    if (0 != strcmp(fields[7], "VBAT")) return false;
+    if (0 != strcmp(fields[8], "Diff")) return false;
+    if (0 != strcmp(fields[9], "Quality")) return false;
 
     // parse the date (YYYY/MM/DD)
     if (3 != sscanf(field_values[1], "%u/%u/%u", &yeartemp, &monthtemp, &daytemp)) return false;
@@ -245,8 +247,14 @@ bool XMLReader::ParseGPSMessage()
     // parse the solar zenith angle
     if (1 != sscanf(field_values[6], "%f", &szatemp)) return false;
 
+    // parse the vbat
+    if (1 != sscanf(field_values[7], "%f", &vbattemp)) return false;
+
+    // parse the diff
+    if (1 != sscanf(field_values[8], "%f", &difftemp)) return false;
+
     // parse the GPS fix quality
-    if (1 != sscanf(field_values[7], "%u", &qualitytemp)) return false;
+    if (1 != sscanf(field_values[9], "%u", &qualitytemp)) return false;
     if (0 == qualitytemp) return false; // ignore these messages
 
     // only assign values once the message has been parsed successfully
@@ -262,6 +270,8 @@ bool XMLReader::ParseGPSMessage()
         zephyr_gps.latitude = lattemp;
         zephyr_gps.altitude = alttemp;
         zephyr_gps.solar_zenith_angle = szatemp;
+        zephyr_gps.diff = difftemp;
+        zephyr_gps.vbat = vbattemp;
     }
 
     return true;
@@ -334,7 +344,7 @@ bool XMLReader::ReadField(uint32_t timeout)
     char new_char = '\0';
 
     // read opening field tag
-    if (!ReadOpeningTag(timeout, fields[num_fields], 8)) return false;
+    if (!ReadOpeningTag(timeout, fields[num_fields], MAX_MSG_FIELDS)) return false;
 
     // read the field value until start of close tag or error
     while (millis() < timeout && itr < 15) {
