@@ -105,6 +105,11 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
     case SETSAMPLEAVG:
         if (!Get_uint16(&(lpcParam.samplesToAverage),1)) return false;
         break;
+    case SETPHA:
+        if (!Get_uint16(&(lpcParam.phaBaseline),1)) return false;
+        if (!Get_uint16(&(lpcParam.phaHiGainOffset),1)) return false;
+        if (!Get_uint16(&(lpcParam.phaLoGainOffset),1)) return false;
+        break;
     // DIB Parameters -------------------------------------
     case FTRONTIME:
         if (!Get_uint16(&(dibParam.ftrOnTime),1)) return false;

@@ -71,6 +71,8 @@ enum Telecommand_t : uint8_t {
     SETHKPERIOD = 108, // Time in minutes
     SETFLUSH = 109, // Time in seconds for air flush
     SETSAMPLEAVG = 110, // Values to average from PHA
+    // IDs 111-115 are defined in TCMessage.py, but not here
+    SETPHA = 116, // Pulse height analyzer parameters
 
     // RACHUTS Commands and Settings
     SETAUTO = 130,
@@ -154,6 +156,9 @@ struct LPC_Param_t {
     uint8_t setLaserTemp;
     uint8_t hkPeriod;
     uint8_t lpc_flush;
+    uint16_t phaBaseline;
+    uint16_t phaHiGainOffset;
+    uint16_t phaLoGainOffset;
 };
 
 struct MCB_Param_t {
