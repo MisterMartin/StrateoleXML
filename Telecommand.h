@@ -73,6 +73,7 @@ enum Telecommand_t : uint8_t {
     SETSAMPLEAVG = 110, // Values to average from PHA
     // IDs 111-115 are defined in TCMessage.py, but not here
     SETPHA = 116, // Pulse height analyzer parameters
+    REGENRS41 = 117, // Initiate an RS41 regeneration
 
     // RACHUTS Commands and Settings
     SETAUTO = 130,
