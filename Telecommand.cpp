@@ -106,7 +106,7 @@ bool XMLReader::ParseTelecommand(uint8_t telecommand)
         if (!Get_uint16(&(lpcParam.samplesToAverage),1)) return false;
         break;
     case SETPHA:
-        if (!Get_uint16(&(lpcParam.phaBaseline),1)) return false;
+        if (!Get_uint16(&(lpcParam.phaHiGainThreshold),1)) return false;
         if (!Get_uint16(&(lpcParam.phaHiGainOffset),1)) return false;
         if (!Get_uint16(&(lpcParam.phaLoGainOffset),1)) return false;
         break;

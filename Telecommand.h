@@ -157,7 +157,7 @@ struct LPC_Param_t {
     uint8_t setLaserTemp;
     uint8_t hkPeriod;
     uint8_t lpc_flush;
-    uint16_t phaBaseline;
+    uint16_t phaHiGainThreshold;
     uint16_t phaHiGainOffset;
     uint16_t phaLoGainOffset;
 };
