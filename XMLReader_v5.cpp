@@ -38,6 +38,7 @@ inline bool XMLReader::ReadNextChar(char * new_char)
 
     // make sure the new character is good, if not, return failure
     int read_ret = rx_stream->read();
+    Serial.write(read_ret);
     if (read_ret == -1) return false;
     ret_char = (uint8_t) read_ret;
 
@@ -72,7 +73,7 @@ void XMLReader::ResetReader()
 bool XMLReader::GetNewMessage()
 {
     // set a 0.1 second timeout
-    uint32_t timeout = millis() + 100;
+    uint32_t timeout = millis() + 200;
     char read_char = '\0';
 
     // read the message type opening tag through the newline, verify the type
