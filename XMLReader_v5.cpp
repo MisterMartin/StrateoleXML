@@ -38,7 +38,7 @@ inline bool XMLReader::ReadNextChar(char * new_char)
 
     // make sure the new character is good, if not, return failure
     int read_ret = rx_stream->read();
-    Serial.write(read_ret);
+    //Serial.write(read_ret);
     if (read_ret == -1) return false;
     ret_char = (uint8_t) read_ret;
 
