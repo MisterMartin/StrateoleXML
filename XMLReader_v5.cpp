@@ -266,7 +266,7 @@ bool XMLReader::ParseGPSMessage()
     zephyr_gps.minute = (uint8_t) minutetemp;
     zephyr_gps.second = (uint8_t) secondtemp;
     zephyr_gps.quality = qualitytemp;
-    if (qualitytemp > 1) {
+    if (qualitytemp >= 1) {
         zephyr_gps.longitude = longtemp;
         zephyr_gps.latitude = lattemp;
         zephyr_gps.altitude = alttemp;
