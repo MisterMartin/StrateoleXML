@@ -31,7 +31,7 @@
 
 #include "InstInfo.h"
 #include "Arduino.h"
-#include "Time.h"
+#include "TimeLib.h"
 
 #define TMBUF_MAXSIZE   8192
 //#define LOG
