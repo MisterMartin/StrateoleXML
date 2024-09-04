@@ -13,10 +13,11 @@
 enum Instrument_t {
     FLOATS = 0,
     RACHUTS = 1,
-    LPC = 2
+    LPC = 2,
+    RATS = 3
 };
 
 // indexed by Instrument_t enum, declared in XMLReader_v5.cpp
-extern char inst_ids[3][8];
+extern char inst_ids[4][8];
 
 #endif /* INSTINFO_H */

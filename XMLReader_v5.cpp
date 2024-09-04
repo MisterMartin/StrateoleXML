@@ -15,7 +15,7 @@
 
 #include "XMLReader_v5.h"
 
-char inst_ids[3][8] = {"FLOATS", "RACHUTS", "LPC"};
+char inst_ids[4][8] = {"FLOATS", "RACHUTS", "LPC", "RATS"};
 
 // global structs for received parameters
 DIB_Param_t dibParam = {0};
