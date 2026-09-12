@@ -120,21 +120,23 @@ enum Telecommand_t : uint8_t {
     // USETIMETRIGGER = 139,    // Use time trigger for autonomous profiles
     // SETTIMETRIGGER = 140,    // Set Unix timestamp for autonomous profile trigger. param0: timestamp (uint32)
     SETDOCKOVERSHOOT = 141,     // Set dock overshoot distance. param0: overshoot (float, revolutions)
-    RETRYDOCK = 142,            // Manual redock command (manual mode only). param0: deploy length (rev), param1: retract length (rev)
-    GETPUSTATUS = 143,          // Request RPU status via dock serial (manual mode only)
+    RETRYDOCK = 142,            // Manual redock command. param0: deploy length (rev), param1: retract length (rev)
+    GETPUSTATUS = 143,          // Request RPU status via dock serial
     PUPOWERON = 144,            // Enable RPU dock power
     PUPOWEROFF = 145,           // Disable RPU dock power
-    MANUALPROFILE = 146,        // Execute a profile (manual mode only). param0: profile size (rev), param1: dock amount (rev), param2: dock overshoot (rev), param3: dwell time (s), param4: RPU sample rate (s)
-    OFFLOADPUPROFILE = 147,     // Offload stored RPU profile data (manual mode only)
+    PROFILE = 146,              // Execute a profile. param0: profile size (rev), param1: dock amount (rev), param2: dock overshoot (rev), param3: dwell time (s), param4: RPU sample rate (s)
+    OFFLOADPUPROFILE = 147,     // Offload stored RPU profile data
     SETPREPROFILETIME = 148,    // Set pre-profile wait time after RPU enters measure mode. param0: time (uint16, seconds)
     AUTOREDOCKPARAMS = 150,     // Set auto-redock parameters. param0: redock out (rev), param1: redock in (rev), param2: max retries
     SETMOTIONTIMEOUT = 151,     // Set motion timeout. param0: timeout (uint16, seconds)
     GETPIBEEPROM = 152,         // Request PIB EEPROM contents as TM
-    DOCKEDPROFILE = 153,        // Execute a docked profile (manual mode only). param0: duration (s), param1: sample rate (s)
+    DOCKEDPROFILE = 153,        // Execute a docked profile. param0: duration (s), param1: sample rate (s)
     STARTREALTIMEMCB = 154,     // Enable real-time MCB data streaming mode
     EXITREALTIMEMCB = 155,      // Disable real-time MCB data streaming mode
     CANCELMEASURE = 156,        // Cancel an in-progress docked profile (RPU measurement); no params. Will also be wired to cancel a manual profile in the future.
     SETDOCKEDOFFLOADPERIOD = 157, // Set the docked profile's periodic offload interval. param0: period (uint16, seconds; 0 = offload once at the end, the legacy behavior)
+    RAACKOVERRIDEON = 158,      // Bypass the RA-ack requirement (emergency use, not persisted, resets to off on reboot)
+    RAACKOVERRIDEOFF = 159,     // Restore the normal RA-ack requirement
 
     // RPU commands and settings
     RPUCONFIG = 180,        // Configure RPU sensor enables. param0: enable ROPC, param1: enable TDLAS, param2: enable TSEN, param3: enable RS41
