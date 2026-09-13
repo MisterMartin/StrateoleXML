@@ -148,6 +148,8 @@ enum Telecommand_t : uint8_t {
     RPUGOSTANDBY = 184,     // Go to STANDBY mode
     RPUGOMEASURE = 185,     // Send go-measure command to RPU. param0: duration (s), param1: sample rate (s). Sensor enables/batt temp from stored config.
 
+    RPUREGENRS41 = 186,     // Trigger an RS41 regeneration cycle on the RPU (requires RPU in MEASURE with RS41 enabled); no params
+
     // Generic instrument commands
     RESET_INST = 200,
     EXITERROR = 201,
